@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RadOnc Digest v5</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── NORDIC FOGGY BLUE PALETTE ─────────────────── */
+:root{
+  --bg:     #1a2e3e;
+  --sur:    #243c50;
+  --sur2:   #2e4d65;
+  --sur3:   #385e78;
+  --txt:    #f2f9fd;
+  --txt2:   #c8e2f0;
+  --mu:     #90c4da;
+  --ter:    #5e98b4;
+  --ac:     #7ac1e7;
+  --acd:    rgba(122,193,231,.15);
+  --ach:    rgba(122,193,231,.26);
+  --bd:     rgba(120,190,225,.22);
+  --bdh:    rgba(120,190,225,.46);
+  --read-c: #236652;
+  --del-c:  #7a2e2e;
+  --fav-c:  #24567a;
+  --share-c:#24407a;
+  --idea-c: #245e40;
+  --track-c:#5e5820;
+  --apply-c:#145c78;
+  --analyze-c:#7a4e20;
+  --panel-bg: #182e3e;
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --hdr:52px;
+  --bot:60px;
+  --r:6px;
+  --rl:10px;
+  --rxl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:14px;line-height:1.5}
+button,input,textarea,select{font-family:var(--font)}
+button{cursor:pointer}
+a{color:var(--ac);text-decoration:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--ter);border-radius:2px}
+
+/* ── APP SHELL ──────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* HEADER */
+header{
+  height:var(--hdr);flex-shrink:0;
+  display:flex;align-items:center;padding:0 1rem;gap:10px;
+  background:var(--sur);border-bottom:1px solid var(--bd);
+}
+.logo{
+  font-family:var(--mono);font-size:12px;color:var(--ac);
+  letter-spacing:.05em;display:flex;align-items:center;gap:7px;
+  white-space:nowrap;
+}
+.logo-dot{width:5px;height:5px;border-radius:50%;background:var(--ac);opacity:.7;flex-shrink:0}
+.hdr-spacer{flex:1}
+
+/* Desktop nav in header */
+.hdr-nav{display:none;gap:2px}
+@media(min-width:640px){.hdr-nav{display:flex}}
+.hdr-tab{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;color:var(--mu);background:none;border:none;
+  padding:6px 12px;border-radius:var(--rl);transition:all .15s;
+}
+.hdr-tab:hover{color:var(--txt);background:var(--acd)}
+.hdr-tab.on{color:var(--ac);background:var(--acd)}
+.hdr-tab svg{width:13px;height:13px;flex-shrink:0}
+
+.sync-btn{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--mu);background:none;
+  border:1px solid var(--bd);border-radius:var(--rl);
+  padding:5px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.sync-btn:hover{border-color:var(--bdh);color:var(--txt)}
+.sync-btn.on{color:var(--ac);border-color:rgba(136,196,222,.3)}
+.sync-btn svg{width:13px;height:13px}
+
+/* MAIN */
+main{
+  flex:1;overflow:hidden;
+  padding-bottom:var(--bot);
+}
+@media(min-width:640px){main{padding-bottom:0}}
+
+/* BOTTOM NAV (mobile) */
+.bot-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--bot);
+  background:var(--sur);border-top:1px solid var(--bd);
+  display:flex;
+  safe-area-inset-bottom:env(safe-area-inset-bottom);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+@media(min-width:640px){.bot-nav{display:none}}
+.bot-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;font-size:10px;color:var(--mu);background:none;border:none;
+  transition:all .15s;
+}
+.bot-tab.on{color:var(--ac)}
+.bot-tab svg{width:18px;height:18px}
+
+/* VIEWS */
+.view{display:none;height:100%;overflow-y:auto}
+.view.on{display:block}
+#v-lib.on{display:flex;flex-direction:column}
+
+/* ── LIBRARY ────────────────────────────────── */
+#v-lib{overflow:hidden}
+
+.filter-bar{
+  flex-shrink:0;background:var(--sur);border-bottom:1px solid var(--bd);
+  padding:.6rem .875rem;display:flex;flex-direction:column;gap:.4rem;
+}
+.search-row{display:flex;align-items:center;gap:8px;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);padding:6px 10px}
+.search-row input{background:none;border:none;outline:none;color:var(--txt);font-size:13px;flex:1;min-width:0}
+.search-row input::placeholder{color:var(--ter)}
+.search-row svg{flex-shrink:0;color:var(--mu)}
+.filter-row{display:flex;gap:5px;align-items:center;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-height:26px;max-height:26px}
+.filter-row::-webkit-scrollbar{display:none}
+.chip{
+  font-size:11px;padding:3px 10px;border-radius:13px;
+  border:1px solid var(--bd);background:transparent;color:var(--mu);
+  cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:4px;
+}
+.chip:hover{border-color:var(--bdh)}
+.chip.on{color:#ddeef6;border-color:transparent}
+.chip-unread.on{background:var(--ter)}
+.chip-read.on{background:var(--read-c)}
+.chip-del.on{background:var(--del-c)}
+.chip-fav.on{background:var(--fav-c)}
+.chip-share.on{background:var(--share-c)}
+.chip-idea.on{background:var(--idea-c)}
+.chip-track.on{background:var(--track-c)}
+.chip-apply.on{background:var(--apply-c)}
+.chip-analyze.on{background:var(--analyze-c);color:#f8dfc0}
+.chip-ht{background:var(--acd);border-color:rgba(122,193,231,.2);color:var(--ac)}
+.chip-ht.on{background:var(--ac);color:#12242e;border-color:transparent}
+.sep-v{width:1px;height:14px;background:var(--bd);flex-shrink:0}
+
+.lib-body{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
+
+/* Article list */
+.list-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.list-top{display:flex;align-items:center;justify-content:space-between;padding:.45rem .875rem;flex-shrink:0;border-bottom:1px solid var(--bd)}
+.list-cnt{font-family:var(--mono);font-size:10px;color:var(--mu)}
+.list-scroll{flex:1;overflow-y:auto;position:relative;background:var(--panel-bg)}
+.vs-inner{position:relative}
+
+/* Article card */
+.acard{
+  position:absolute;left:0;right:0;
+  border-bottom:1px solid var(--bd);
+  padding:.7rem .875rem;cursor:pointer;
+  transition:background .1s;
+  display:flex;gap:10px;align-items:flex-start;
+}
+.acard:hover{background:rgba(255,255,255,.04)}
+.acard.sel{background:rgba(122,193,231,.1);border-left:2px solid var(--ac)}
+.acard-body{flex:1;min-width:0}
+.acard-num{font-family:var(--mono);font-size:9px;color:var(--ter);margin-bottom:3px}
+.acard-title{font-size:13px;line-height:1.45;color:var(--txt);margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.acard.sel .acard-title{color:var(--ac)}
+.acard-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.acard-j{font-size:11px;color:var(--txt2);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.acard-d{font-size:10px;color:var(--mu);font-family:var(--mono);white-space:nowrap}
+.acard-if{font-size:10px;color:var(--ac);font-family:var(--mono);white-space:nowrap}
+.acard-r{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.sdot{width:7px;height:7px;border-radius:50%}
+.sdot-unread{background:var(--mu);opacity:.45}
+.sdot-read{background:var(--read-c);opacity:.9}
+.sdot-deleted{background:var(--del-c);opacity:.9}
+.pdots{display:flex;gap:3px}
+.pdot{width:5px;height:5px;border-radius:50%}
+.pdot-fav{background:var(--fav-c)}
+.pdot-share{background:var(--share-c)}
+.pdot-idea{background:var(--idea-c)}
+.pdot-track{background:var(--track-c)}
+.pdot-apply{background:var(--apply-c)}
+.pdot-analyze{background:var(--analyze-c)}
+.ht-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;max-width:70px}
+.ht-dot{font-size:9px;color:var(--ter);background:var(--sur2);border-radius:2px;padding:1px 3px;font-family:var(--mono)}
+
+.list-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--mu)}
+.list-empty svg{opacity:.25}
+.list-empty p{font-size:13px;text-align:center;line-height:1.6}
+
+/* ── SIDE PANEL — always visible on desktop ── */
+.sp{
+  flex-shrink:0;width:500px;overflow:hidden;
+  border-left:1px solid var(--bd);
+  display:flex;flex-direction:column;background:var(--panel-bg);
+}
+
+/* Mobile: full-screen overlay */
+@media(max-width:639px){
+  .sp{
+    position:fixed;inset:0;width:100vw!important;
+    transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+    z-index:100;
+  }
+  .sp.on{transform:translateX(0);width:100vw!important}
+}
+
+.sp-head{
+  display:flex;align-items:center;padding:.75rem 1rem;
+  border-bottom:1px solid var(--bd);flex-shrink:0;gap:8px;
+}
+.sp-back{
+  background:none;border:none;color:var(--mu);
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;padding:4px 6px;border-radius:var(--r);
+  transition:color .15s;
+}
+.sp-back:hover{color:var(--txt)}
+.sp-back svg{width:16px;height:16px}
+.sp-ext{
+  margin-left:auto;display:flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--mu);background:none;border:none;
+  transition:color .15s;
+}
+.sp-ext:hover{color:var(--ac)}
+.sp-ext svg{width:12px;height:12px}
+.sp-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+
+.sp-block{padding:.85rem 1rem;border-bottom:1px solid var(--bd)}
+.sp-lbl{font-family:var(--mono);font-size:9px;color:var(--mu);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
+.sp-ttl{font-size:14px;font-weight:500;line-height:1.5;color:var(--txt)}
+.sp-jrnl{font-size:13px;color:var(--txt2);font-style:italic}
+.sp-meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px}
+.sp-m{font-family:var(--mono);font-size:11px;color:var(--ter)}
+.sp-if{font-family:var(--mono);font-size:12px;color:var(--ac)}
+.sp-auth{font-size:12px;color:var(--txt2);line-height:1.5;margin-top:5px}
+.sp-abs{font-size:13px;color:var(--txt);line-height:1.8}
+.sp-abs.loading{color:var(--mu);font-style:italic}
+.sp-aitags{display:flex;flex-wrap:wrap;gap:5px}
+.aitag{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--acd);border:1px solid rgba(136,196,222,.2);color:var(--ac)}
+/* ── TAG MANAGER ── */
+.tm-search{width:100%;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);padding:.45rem .75rem;color:var(--txt);font-size:13px;outline:none;transition:border .15s;margin-bottom:.75rem}
+.tm-search:focus{border-color:var(--bdh)}
+.tm-search::placeholder{color:var(--ter)}
+.tm-list{display:flex;flex-direction:column;gap:3px;max-height:300px;overflow-y:auto}
+.tm-row{display:flex;align-items:center;gap:6px;padding:.35rem .4rem;border-radius:var(--r);transition:background .1s}
+.tm-row:hover{background:var(--acd)}
+.tm-tag{font-size:12px;color:var(--txt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-cnt{font-family:var(--mono);font-size:10px;color:var(--ter);flex-shrink:0;min-width:28px;text-align:right}
+.tm-acts{display:flex;gap:3px;flex-shrink:0}
+.tm-btn{background:none;border:1px solid var(--bd);border-radius:var(--r);padding:2px 7px;font-size:10px;color:var(--mu);cursor:pointer;transition:all .15s;white-space:nowrap}
+.tm-btn:hover{border-color:var(--bdh);color:var(--txt)}
+.tm-btn.red:hover{border-color:rgba(200,80,80,.5);color:#e08080}
+.tm-btn.amber:hover{border-color:rgba(200,150,50,.5);color:#c8a050}
+.tm-blocked{margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bd)}
+.tm-bl-lbl{font-size:10px;color:var(--ter);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem}
+.tm-bl-tags{display:flex;flex-wrap:wrap;gap:4px}
+.tm-bl-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(200,150,50,.1);border:1px solid rgba(200,150,50,.25);color:#c8a050;font-family:var(--mono)}
+.tm-bl-x{background:none;border:none;color:rgba(200,150,50,.5);cursor:pointer;font-size:14px;line-height:1;padding:0;transition:color .1s}
+.tm-bl-x:hover{color:#c8a050}
+.aitag-x{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 8px;border-radius:10px;background:var(--acd);border:1px solid rgba(122,193,231,.2);color:var(--ac);cursor:default}
+.aitag-xbtn{background:none;border:none;color:rgba(122,193,231,.45);cursor:pointer;font-size:13px;line-height:1;padding:0;transition:color .1s}
+.aitag-xbtn:hover{color:var(--ac)}
+.aitag-inp-row{display:flex;gap:5px;margin-top:.4rem}
+.aitag-inp{flex:1;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);padding:4px 8px;color:var(--txt);font-size:11px;font-family:var(--mono);outline:none;transition:border .15s}
+.aitag-inp:focus{border-color:var(--bdh)}
+
+/* MARKING */
+.mark-block{padding:.85rem 1rem;border-bottom:1px solid var(--bd)}
+.status-row{display:flex;gap:6px;margin-bottom:.8rem}
+.sbtn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+  font-size:12px;padding:7px 4px;border-radius:var(--rl);
+  border:1px solid var(--bd);background:transparent;color:var(--mu);
+  transition:all .15s;
+}
+.sbtn:hover{border-color:var(--bdh)}
+.sbtn.on{color:#ddeef6;border-color:transparent}
+.sbtn.on.s-unread{background:var(--ter)}
+.sbtn.on.s-read{background:var(--read-c)}
+.sbtn.on.s-del{background:var(--del-c)}
+.sbtn svg{width:12px;height:12px}
+.purpose-row{display:flex;gap:5px;margin-bottom:.8rem}
+.pbtn{
+  flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;
+  gap:3px;padding:6px 2px;border-radius:var(--rl);border:1px solid var(--bd);
+  background:transparent;color:var(--mu);transition:all .15s;font-size:10px;
+}
+.pbtn:hover{border-color:var(--bdh)}
+.pbtn.on{color:var(--txt);border-color:transparent}
+.pbtn.on.p-fav{background:var(--fav-c)}
+.pbtn.on.p-share{background:var(--share-c)}
+.pbtn.on.p-idea{background:var(--idea-c)}
+.pbtn.on.p-track{background:var(--track-c)}
+.pbtn.on.p-apply{background:var(--apply-c)}
+.pbtn.on.p-analyze{background:var(--analyze-c)}
+.pbtn svg{width:13px;height:13px}
+.ht-input-row{display:flex;gap:6px;align-items:center;margin-bottom:.5rem}
+.ht-inp{
+  flex:1;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);
+  padding:6px 10px;color:var(--txt);font-family:var(--mono);font-size:12px;
+  outline:none;transition:border .15s;
+}
+.ht-inp:focus{border-color:var(--bdh)}
+.ht-add{
+  background:var(--acd);border:1px solid rgba(136,196,222,.2);
+  border-radius:var(--r);padding:6px 8px;color:var(--ac);
+  display:flex;align-items:center;transition:all .15s;
+}
+.ht-add:hover{background:var(--ach)}
+.ht-add svg{width:13px;height:13px}
+.ht-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.5rem}
+.ht-pill{
+  display:inline-flex;align-items:center;gap:4px;font-size:11px;
+  padding:2px 8px;border-radius:10px;background:var(--sur2);
+  border:1px solid var(--bd);color:var(--mu);font-family:var(--mono);
+}
+.ht-x{background:none;border:none;color:var(--ter);cursor:pointer;font-size:15px;line-height:1;padding:0 1px;transition:color .1s}
+.ht-x:hover{color:var(--txt2)}
+.ht-suggest{display:flex;flex-wrap:wrap;gap:4px}
+.ht-sug{font-size:10px;padding:2px 7px;border-radius:9px;background:transparent;border:1px solid var(--bd);color:var(--ter);cursor:pointer;font-family:var(--mono);transition:all .15s}
+.ht-sug:hover{border-color:var(--bdh);color:var(--mu)}
+.notes-ta{
+  width:100%;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);
+  padding:7px 10px;color:var(--txt);font-size:13px;resize:none;outline:none;
+  line-height:1.5;transition:border .15s;height:60px;
+}
+.notes-ta:focus{border-color:var(--bdh)}
+
+/* ── FETCH VIEW ─────────────────────────────── */
+#v-fetch{padding:1rem;gap:1rem}
+#v-fetch .panel{margin-bottom:1rem}
+.panel{background:var(--sur);border:1px solid var(--bd);border-radius:var(--rxl);padding:1rem}
+.panel-title{font-family:var(--mono);font-size:10px;color:var(--mu);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.875rem;display:flex;align-items:center;gap:8px}
+.panel-title svg{width:13px;height:13px}
+.gi{background:var(--sur);border:1px solid var(--bd);border-radius:var(--rl);padding:.75rem;margin-bottom:8px;display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:start}
+.gi.off{opacity:.55}
+.gi-l{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:2px}
+.tog{width:32px;height:18px;border-radius:9px;background:var(--ter);border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--ac)}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .2s}
+.tog.on::after{transform:translateX(14px)}
+.gi-del{background:none;border:none;color:var(--ter);display:flex;align-items:center;padding:2px;transition:color .15s}
+.gi-del:hover{color:var(--txt2)}
+.gi-del svg{width:13px;height:13px}
+.gi-r{display:flex;flex-direction:column;gap:6px}
+.gi-name{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r);padding:4px 8px;color:var(--txt);font-size:12px;font-weight:500;outline:none;width:100%;transition:border .15s}
+.gi-name:focus{border-color:var(--bdh)}
+.gi-q{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r);padding:5px 8px;color:var(--txt2);font-family:var(--mono);font-size:11px;outline:none;resize:vertical;min-height:44px;width:100%;line-height:1.5;transition:border .15s}
+.gi-q:focus{border-color:var(--bdh)}
+.gi-hits{font-size:10px;font-family:var(--mono);color:var(--ac);display:none}
+.gi-hits.on{display:block}
+.gi-hits.err{color:#e07070}
+.add-gi-btn{width:100%;background:none;border:1px dashed var(--bd);border-radius:var(--rl);padding:.5rem;color:var(--ter);font-size:12px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
+.add-gi-btn:hover{border-color:var(--bdh);color:var(--mu)}
+.add-gi-btn svg{width:13px;height:13px}
+.sel-wrap{margin-bottom:.75rem}
+.sel-lbl{font-size:11px;color:var(--mu);margin-bottom:.3rem}
+select{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);color:var(--txt);padding:.45rem .75rem;font-size:13px;outline:none;cursor:pointer;width:100%;transition:border .15s;appearance:none}
+select:focus{border-color:var(--bdh)}
+.run-btn{
+  width:100%;padding:.7rem;background:var(--ac);color:#12242e;border:none;
+  border-radius:var(--rl);font-size:13px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:opacity .15s;margin-top:.75rem;
+}
+.run-btn:hover{opacity:.85}
+.run-btn:disabled{opacity:.35;cursor:not-allowed}
+.run-btn svg{width:14px;height:14px}
+.prog-wrap{height:3px;background:var(--sur2);border-radius:2px;margin-top:.6rem;overflow:hidden;display:none}
+.prog{height:100%;background:var(--ac);border-radius:2px;transition:width .4s;width:0}
+.f-status{font-size:11px;font-family:var(--mono);color:var(--mu);margin-top:.4rem;min-height:15px}
+
+/* ── SETTINGS VIEW ──────────────────────────── */
+#v-set{padding:1rem;gap:1rem}
+#v-set .panel{margin-bottom:1rem}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:.75rem}
+.set-l{flex:1}
+.set-ttl{font-size:13px;color:var(--txt)}
+.set-sub{font-size:11px;color:var(--mu);margin-top:2px}
+.key-row{display:flex;gap:6px;align-items:center;margin-bottom:.5rem}
+.key-inp{
+  flex:1;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);
+  padding:.45rem .75rem;color:var(--txt);font-family:var(--mono);font-size:12px;
+  outline:none;transition:border .15s;
+}
+.key-inp:focus{border-color:var(--bdh)}
+.key-save{
+  background:var(--acd);border:1px solid rgba(136,196,222,.2);
+  border-radius:var(--rl);padding:.4rem .9rem;color:var(--ac);font-size:12px;
+  transition:all .15s;flex-shrink:0;white-space:nowrap;
+}
+.key-save:hover{background:var(--ach)}
+.exp-btn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:.7rem .875rem;border-radius:var(--rl);
+  border:1px solid var(--bd);background:transparent;color:var(--txt);
+  font-size:13px;transition:all .15s;text-align:left;margin-bottom:8px;
+}
+.exp-btn:hover{border-color:var(--bdh);background:var(--acd)}
+.exp-btn svg{width:15px;height:15px;color:var(--ac);flex-shrink:0}
+.exp-btn-sub{font-size:11px;color:var(--mu);display:block;margin-top:1px}
+.imp-btn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:.7rem .875rem;border-radius:var(--rl);
+  border:1px solid var(--bd);background:transparent;color:var(--mu);
+  font-size:13px;transition:all .15s;cursor:pointer;
+}
+.imp-btn:hover{border-color:var(--bdh);color:var(--txt)}
+.imp-btn svg{width:15px;height:15px;flex-shrink:0}
+#imp-file{display:none}
+
+.db-info{font-family:var(--mono);font-size:11px;color:var(--mu);line-height:1.8}
+.db-info span{color:var(--ac)}
+
+/* ── DIVIDER ────────────────────────────────── */
+.div{height:1px;background:var(--bd);margin:.25rem 0}
+
+/* ── TOAST ──────────────────────────────────── */
+.toast{
+  position:fixed;bottom:calc(var(--bot) + 12px);left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:var(--sur3);border:1px solid var(--bdh);border-radius:var(--rxl);
+  padding:.5rem 1rem;font-size:12px;color:var(--txt);
+  z-index:500;opacity:0;transition:all .2s;pointer-events:none;
+  white-space:nowrap;
+}
+@media(min-width:640px){.toast{bottom:12px}}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── LOADER ─────────────────────────────────── */
+.loader{display:inline-block;width:13px;height:13px;border:2px solid var(--ter);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── DESKTOP FULL-HEIGHT LAYOUTS ───────────────── */
+@media(min-width:640px){
+  /* FETCH */
+  #v-fetch{overflow:hidden;padding:0;gap:0}
+  #v-fetch .panel{margin-bottom:0;border-radius:0;border:none;border-right:1px solid var(--bd);overflow-y:auto;padding:1.25rem 1.5rem;height:100%}
+  #v-fetch #fetch-settings-panel{background:var(--sur2)}
+
+  /* SETTINGS */
+  #v-set{overflow:hidden;padding:0;gap:0}
+  #v-set .panel{margin-bottom:0;border-radius:0;border:none;border-right:1px solid var(--bd);overflow-y:auto;padding:1.25rem 1.5rem;height:100%}
+  #v-set .panel:last-child{border-right:none;background:var(--sur2)}
+  #v-set .panel:nth-child(2){background:var(--bg)}
+  .tm-list{max-height:none}
+
+  /* panel-title larger on desktop */
+  .panel-title{font-size:11px;margin-bottom:1.1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="gate" style="
+  position:fixed;inset:0;z-index:9999;
+  background:#1a2e3e;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+">
+  <div style="font-family:'Space Mono',monospace;font-size:13px;color:#7ac1e7;letter-spacing:.1em;margin-bottom:4px">
+    RadOnc Digest
+  </div>
+  <div style="font-size:11px;color:#5e98b4;font-family:'Space Mono',monospace;margin-bottom:16px">
+    請輸入密碼
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <input id="gate-inp" type="password" placeholder="密碼"
+      style="background:#243c50;border:1px solid rgba(122,193,231,.3);border-radius:8px;
+             padding:10px 16px;color:#f2f9fd;font-size:14px;outline:none;
+             font-family:'DM Sans',sans-serif;width:200px;letter-spacing:2px"
+      onkeydown="if(event.key==='Enter')gateCheck()"
+      oninput="document.getElementById('gate-err').style.opacity=0"
+    >
+    <button onclick="gateCheck()" style="
+      background:#7ac1e7;border:none;border-radius:8px;
+      padding:10px 18px;color:#0f2030;font-size:13px;font-weight:500;
+      cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s
+    " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+      進入
+    </button>
+  </div>
+  <div id="gate-err" style="font-size:12px;color:#e07070;opacity:0;transition:opacity .2s;font-family:'DM Sans',sans-serif">
+    密碼錯誤，請再試一次
+  </div>
+</div>
+
+<div id="app" style="display:none">
+
+<!-- HEADER -->
+<header>
+  <div class="logo"><div class="logo-dot"></div>RadOnc Digest <span style="font-size:10px;color:var(--ter);font-family:var(--mono);margin-left:3px">v5</span></div>
+  <div class="hdr-spacer"></div>
+  <nav class="hdr-nav">
+    <button class="hdr-tab on" data-tab="lib" onclick="go('lib')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      文獻庫
+    </button>
+    <button class="hdr-tab" data-tab="fetch" onclick="go('fetch')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      抓取
+    </button>
+    <button class="hdr-tab" data-tab="set" onclick="go('set')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+      設定
+    </button>
+  </nav>
+  <button class="sync-btn" onclick="openAnalysis()" title="選取收藏文章，複製給 Claude 分析" style="margin-right:4px;border-color:rgba(122,193,231,.35);color:var(--ac)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    分析
+  </button>
+  <button class="sync-btn" id="purge-btn" onclick="manualPurge()" title="立刻清除所有已刪除文章" style="margin-right:4px;border-color:rgba(200,100,100,.28);color:var(--mu)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+    <span id="purge-lbl">清除已刪除</span>
+  </button>
+  <button class="sync-btn" id="sync-btn" onclick="connectFolder()" title="同步到資料夾（桌機 Chrome）">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+    <span id="sync-lbl">資料夾</span>
+  </button>
+</header>
+
+<!-- ANALYSIS MODAL -->
+<div id="analysis-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,25,38,.75);z-index:200;backdrop-filter:blur(3px)" onclick="if(event.target===this)closeAnalysis()">
+  <div id="analysis-modal" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(640px,92vw);max-height:85vh;background:var(--sur);border:1px solid var(--bd);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5)">
+    <!-- Step 1: select -->
+    <div id="ana-step1" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div style="padding:1.1rem 1.25rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span style="font-size:14px;font-weight:500;color:var(--txt)">選擇要分析的文章</span>
+        <span style="font-size:11px;color:var(--mu);margin-left:2px">（標記「AI分析」的文章）</span>
+        <button onclick="closeAnalysis()" style="margin-left:auto;background:none;border:none;color:var(--mu);cursor:pointer;display:flex;align-items:center;padding:4px;border-radius:4px" onmouseover="this.style.color='var(--txt)'" onmouseout="this.style.color='var(--mu)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div style="padding:.65rem 1.25rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+        <span id="ana-sel-cnt" style="font-size:12px;color:var(--mu)">尚未選擇</span>
+        <div style="display:flex;gap:8px">
+          <button onclick="anaSelectAll()" style="font-size:11px;color:var(--ac);background:none;border:none;cursor:pointer">全選</button>
+          <button onclick="anaSelectNone()" style="font-size:11px;color:var(--mu);background:none;border:none;cursor:pointer">全不選</button>
+        </div>
+      </div>
+      <div id="ana-list" style="flex:1;overflow-y:auto;padding:.5rem 0"></div>
+      <div style="padding:.85rem 1.25rem;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center">
+        <button onclick="closeAnalysis()" style="background:transparent;border:1px solid var(--bd);border-radius:8px;padding:.5rem 1rem;font-size:13px;color:var(--mu);cursor:pointer;flex-shrink:0">取消</button>
+        <button id="ana-gen-btn" onclick="anaGenerate()" style="flex:1;background:var(--ac);border:none;border-radius:8px;padding:.55rem 1rem;font-size:13px;font-weight:500;color:#0f2030;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          產生分析文字
+        </button>
+      </div>
+    </div>
+    <!-- Step 2: preview + copy -->
+    <div id="ana-step2" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div style="padding:1.1rem 1.25rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px">
+        <button onclick="anaBack()" style="background:none;border:none;color:var(--mu);cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px" onmouseover="this.style.color='var(--txt)'" onmouseout="this.style.color='var(--mu)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>返回
+        </button>
+        <span id="ana-preview-title" style="font-size:14px;font-weight:500;color:var(--txt)"></span>
+      </div>
+      <div id="ana-preview" style="flex:1;overflow-y:auto;padding:1rem 1.25rem;font-size:12px;font-family:var(--mono);color:var(--txt2);line-height:1.7;white-space:pre-wrap;background:var(--sur2)"></div>
+      <div style="padding:.85rem 1.25rem;border-top:1px solid var(--bd);display:flex;gap:8px">
+        <button onclick="closeAnalysis()" style="background:transparent;border:1px solid var(--bd);border-radius:8px;padding:.5rem 1rem;font-size:13px;color:var(--mu);cursor:pointer">關閉</button>
+        <button id="ana-copy-btn" onclick="anaCopy()" style="flex:1;background:var(--ac);border:none;border-radius:8px;padding:.55rem 1rem;font-size:13px;font-weight:500;color:#0f2030;cursor:pointer;transition:opacity .15s">
+          複製給 Claude
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- LIBRARY -->
+  <div class="view on" id="v-lib">
+    <div class="filter-bar">
+      <div class="search-row">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input id="q-inp" placeholder="搜尋標題、期刊、PMID…" oninput="applyF()">
+      </div>
+      <div class="filter-row" id="filter-row-1">
+        <button class="chip chip-unread" data-fk="f1" data-v="unread" onclick="pickFilter(this,'status','unread')">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>待讀
+        </button>
+        <button class="chip chip-read" data-fk="f1" data-v="read" onclick="pickFilter(this,'status','read')">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>已讀
+        </button>
+        <button class="chip chip-del" data-fk="f1" data-v="deleted" onclick="pickFilter(this,'status','deleted')">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>刪除
+        </button>
+        <div class="sep-v"></div>
+        <button class="chip chip-fav" data-fk="f1" data-v="fav" onclick="pickFilter(this,'purpose','fav')">收藏</button>
+        <button class="chip chip-share" data-fk="f1" data-v="share" onclick="pickFilter(this,'purpose','share')">分享</button>
+        <button class="chip chip-idea" data-fk="f1" data-v="idea" onclick="pickFilter(this,'purpose','idea')">想法</button>
+        <button class="chip chip-track" data-fk="f1" data-v="track" onclick="pickFilter(this,'purpose','track')">追蹤</button>
+        <button class="chip chip-apply" data-fk="f1" data-v="apply" onclick="pickFilter(this,'purpose','apply')">可用</button>
+        <button class="chip chip-analyze" data-fk="f1" data-v="analyze" onclick="pickFilter(this,'purpose','analyze')">AI分析</button>
+        <div class="sep-v"></div>
+        <button class="chip" id="chip-star" data-fk="f1" data-v="star" onclick="pickFilter(this,'star',true)" style="color:#c8a030;border-color:rgba(240,192,64,.25)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          AI 推薦
+        </button>
+        <div class="sep-v"></div>
+        <button id="filter-clear-btn" onclick="clearFilter1()" style="font-size:10px;padding:3px 8px;border-radius:10px;border:1px solid var(--bd);background:transparent;color:var(--ter);cursor:pointer;white-space:nowrap;flex-shrink:0;display:none;transition:all .15s" onmouseover="this.style.color='var(--mu)'" onmouseout="this.style.color='var(--ter)'">✕ 清除</button>
+      </div>
+      <div id="ai-tag-row" style="display:none;flex-shrink:0">
+        <div style="display:flex;gap:5px;align-items:flex-start;padding:2px 0">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--ter);flex-shrink:0;padding-top:4px;min-width:28px">癌別</span>
+          <div style="width:1px;min-height:20px;background:var(--bd);flex-shrink:0;margin:2px 2px 0"></div>
+          <div id="ai-cancer-chips" style="display:flex;gap:4px;flex-wrap:wrap;max-height:58px;overflow:hidden"></div>
+        </div>
+      </div>
+      <div id="ai-topic-row" style="display:none;flex-shrink:0">
+        <div style="display:flex;gap:5px;align-items:flex-start;padding:2px 0">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--ter);flex-shrink:0;padding-top:4px;min-width:28px">主題</span>
+          <div style="width:1px;min-height:20px;background:var(--bd);flex-shrink:0;margin:2px 2px 0"></div>
+          <div id="ai-topic-chips" style="display:flex;gap:4px;flex-wrap:wrap;max-height:58px;overflow:hidden"></div>
+        </div>
+      </div>
+      <div id="ht-tag-row" style="display:none;flex-shrink:0">
+        <div style="display:flex;gap:5px;align-items:flex-start;padding:2px 0">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--ter);flex-shrink:0;padding-top:4px;min-width:16px">#</span>
+          <div style="width:1px;min-height:20px;background:var(--bd);flex-shrink:0;margin:2px 2px 0"></div>
+          <div id="ht-chips" style="display:flex;gap:4px;flex-wrap:wrap;max-height:58px;overflow:hidden"></div>
+        </div>
+      </div>
+    </div>
+    <div class="lib-body">
+      <div class="list-wrap">
+        <div class="list-top">
+          <span class="list-cnt" id="list-cnt">0 篇</span>
+        </div>
+        <div class="list-scroll" id="list-scroll">
+          <div class="vs-inner" id="vs-inner">
+            <div class="list-empty" id="list-empty" style="height:300px">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <p>資料庫是空的<br>到「抓取」拉文章</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- SIDE PANEL — always visible on desktop -->
+      <div class="sp" id="sp">
+        <!-- Empty state: shown when no article selected -->
+        <div id="sp-empty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--mu)">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:.25"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <p style="font-size:12px;color:var(--ter);text-align:center;line-height:1.6">點選左側文章<br>查看詳細內容</p>
+        </div>
+        <!-- Article content: shown when article selected -->
+        <div id="sp-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+          <div class="sp-head">
+            <button class="sp-back" onclick="closePanel()" style="display:none" id="sp-back-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
+              返回
+            </button>
+            <a class="sp-ext" id="sp-link" href="#" target="_blank">
+              PubMed
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+          <div class="sp-scroll">
+          <div class="sp-block">
+            <div class="sp-lbl">標題</div>
+            <div class="sp-ttl" id="sp-ttl"></div>
+          </div>
+          <div class="sp-block">
+            <div class="sp-lbl">期刊 · 作者</div>
+            <div class="sp-jrnl" id="sp-jrnl"></div>
+            <div class="sp-meta-row">
+              <span class="sp-m" id="sp-date"></span>
+              <span class="sp-if" id="sp-if"></span>
+              <span class="sp-m" id="sp-pmid"></span>
+            </div>
+            <div class="sp-auth" id="sp-auth"></div>
+          </div>
+          <div class="sp-block">
+            <div class="sp-lbl">Abstract</div>
+            <div class="sp-abs loading" id="sp-abs">載入中…</div>
+          </div>
+          <div class="sp-block" id="sp-aitags-blk">
+            <div class="sp-lbl" style="margin-bottom:.45rem">AI 分類 <span style="font-size:9px;color:var(--ter)">(點選加入篩選)</span></div>
+            <div class="sp-aitags" id="sp-aitags"></div>
+            <div class="aitag-inp-row">
+              <input class="aitag-inp" id="aitag-inp" placeholder="新增 tag…" onkeydown="if(event.key==='Enter'){event.preventDefault();addAiTag()}">
+              <button class="ht-add" onclick="addAiTag()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+          <!-- MARKING -->
+          <div class="mark-block">
+            <div class="sp-lbl" style="margin-bottom:.6rem">狀態</div>
+            <div class="status-row">
+              <button class="sbtn s-unread" data-s="unread" onclick="setS('unread')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>待讀
+              </button>
+              <button class="sbtn s-read" data-s="read" onclick="setS('read')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>已讀
+              </button>
+              <button class="sbtn s-del" data-s="deleted" onclick="setS('deleted')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>刪除
+              </button>
+            </div>
+            <div class="sp-lbl" style="margin-bottom:.6rem">用途</div>
+            <div class="purpose-row">
+              <button class="pbtn p-fav" data-p="fav" onclick="togP('fav')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                收藏
+              </button>
+              <button class="pbtn p-share" data-p="share" onclick="togP('share')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                分享
+              </button>
+              <button class="pbtn p-idea" data-p="idea" onclick="togP('idea')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                想法
+              </button>
+              <button class="pbtn p-track" data-p="track" onclick="togP('track')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                追蹤
+              </button>
+              <button class="pbtn p-apply" data-p="apply" onclick="togP('apply')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                可用
+              </button>
+              <button class="pbtn p-analyze" data-p="analyze" onclick="togP('analyze')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                AI分析
+              </button>
+            </div>
+            <div class="sp-lbl" style="margin-bottom:.5rem">Hashtag</div>
+            <div class="ht-input-row">
+              <input class="ht-inp" id="ht-inp" placeholder="# 輸入 tag…" onkeydown="if(event.key==='Enter'){event.preventDefault();addHT()}">
+              <button class="ht-add" onclick="addHT()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            <div class="ht-pills" id="ht-pills"></div>
+            <div class="ht-suggest" id="ht-sug"></div>
+            <div class="sp-lbl" style="margin-bottom:.4rem;margin-top:.6rem">備註</div>
+            <textarea class="notes-ta" id="notes-ta" placeholder="記下想法…" oninput="saveNotes()"></textarea>
+          </div>
+          </div><!-- end sp-scroll -->
+        </div><!-- end sp-content -->
+      </div><!-- end sp -->
+    </div>
+  </div>
+
+  <!-- FETCH VIEW -->
+  <div class="view" id="v-fetch">
+    <div class="panel" id="fetch-groups-panel">
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        搜尋群組
+      </div>
+      <div id="gi-list"></div>
+      <button class="add-gi-btn" onclick="addGI()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增群組
+      </button>
+    </div>
+    <div class="panel" id="fetch-settings-panel">
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        抓取設定
+      </div>
+      <div class="sel-wrap">
+        <div class="sel-lbl">日期範圍</div>
+        <select id="f-days">
+          <option value="7">最近 7 天</option>
+          <option value="14">最近 14 天</option>
+          <option value="30">最近 30 天</option>
+          <option value="60">最近 60 天</option>
+          <option value="90">最近 90 天</option>
+          <option value="365">最近 1 年</option>
+        </select>
+      </div>
+      <div class="sel-wrap">
+        <div class="sel-lbl">每組上限</div>
+        <select id="f-max">
+          <option value="50">50 篇</option>
+          <option value="100" selected>100 篇</option>
+          <option value="200">200 篇</option>
+          <option value="500">500 篇</option>
+        </select>
+      </div>
+      <div class="sel-wrap">
+        <div class="sel-lbl">排序</div>
+        <select id="f-sort">
+          <option value="pub+date">發表日期（新→舊）</option>
+          <option value="relevance">相關性</option>
+        </select>
+      </div>
+      <button class="run-btn" id="run-btn" onclick="doFetch()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        開始抓取
+      </button>
+      <div class="prog-wrap" id="f-prog-wrap"><div class="prog" id="f-prog"></div></div>
+      <div class="f-status" id="f-status"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW: 2 columns — (Claude API + DB) | Tag Manager -->
+  <div class="view" id="v-set">
+    <!-- LEFT: Claude API + Database -->
+    <div class="panel" style="overflow-y:auto">
+      <!-- THEME SELECTOR -->
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        介面主題
+      </div>
+      <div id="theme-swatches" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.5rem"></div>
+      <div class="div" style="margin:.8rem 0"></div>
+      <!-- Claude API -->
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Claude API
+      </div>
+      <div class="set-row">
+        <div class="set-l">
+          <div class="set-ttl">AI 自動分類 + 翻譯</div>
+          <div class="set-sub">抓取後自動呼叫 Claude 標 tag 並翻譯標題</div>
+        </div>
+        <button class="tog" id="ai-tog" onclick="togAI()"></button>
+      </div>
+      <div class="div" style="margin:.6rem 0"></div>
+      <div class="sel-lbl" style="margin-bottom:.4rem">API Key</div>
+      <!-- Locked display -->
+      <div id="key-locked" style="display:flex;align-items:center;gap:8px">
+        <div id="key-display" style="flex:1;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rl);padding:.42rem .75rem;font-family:var(--mono);font-size:12px;color:var(--ter);letter-spacing:2px">尚未設定</div>
+        <button onclick="keyEdit()" style="background:var(--acd);border:1px solid rgba(122,193,231,.25);border-radius:var(--rl);padding:.4rem .9rem;color:var(--ac);font-size:12px;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='var(--ach)'" onmouseout="this.style.background='var(--acd)'">編輯</button>
+      </div>
+      <!-- Edit mode (hidden by default) -->
+      <div id="key-edit-row" style="display:none;flex-direction:column;gap:6px">
+        <input class="key-inp" id="key-inp" type="password" placeholder="sk-ant-…">
+        <div style="display:flex;gap:6px">
+          <button onclick="keySave()" style="flex:1;background:var(--ac);border:none;border-radius:var(--rl);padding:.42rem;font-size:12px;font-weight:500;color:#0f2030;cursor:pointer">儲存</button>
+          <button onclick="keyCancel()" style="flex:1;background:transparent;border:1px solid var(--bd);border-radius:var(--rl);padding:.42rem;font-size:12px;color:var(--mu);cursor:pointer">取消</button>
+        </div>
+      </div>
+
+      <!-- Database -->
+      <div class="div" style="margin:1rem 0 .8rem"></div>
+      <div class="panel-title" style="margin-bottom:.75rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        資料庫
+      </div>
+      <div class="db-info" id="db-info">載入中…</div>
+      <div class="div" style="margin:.6rem 0"></div>
+      <div class="sel-lbl">已刪除文章自動清除</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:.3rem;margin-bottom:.2rem">
+        <select id="auto-clear-days" onchange="saveAutoClear(this.value)" style="flex:1">
+          <option value="0">停用</option>
+          <option value="7">7 天</option>
+          <option value="14">14 天</option>
+          <option value="30" selected>30 天（預設）</option>
+          <option value="60">60 天</option>
+          <option value="90">90 天</option>
+        </select>
+        <button onclick="manualPurge()" style="background:var(--acd);border:1px solid rgba(122,193,231,.25);border-radius:var(--rl);padding:.42rem .85rem;color:var(--ac);font-size:12px;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='var(--ach)'" onmouseout="this.style.background='var(--acd)'">立刻清除</button>
+      </div>
+      <div style="font-size:10px;color:var(--ter);margin-bottom:.75rem;font-family:var(--mono)">每週自動執行（上次：<span id="last-purge-lbl">—</span>）</div>
+      <div class="div" style="margin:.5rem 0"></div>
+      <button class="exp-btn" onclick="expDB()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span>匯出資料庫 JSON<span class="exp-btn-sub">完整備份</span></span>
+      </button>
+      <label class="imp-btn" style="display:flex;align-items:center;gap:9px;width:100%;padding:.65rem .85rem;border-radius:var(--rl);border:1px solid var(--bd);background:transparent;color:var(--mu);font-size:13px;transition:all .15s;cursor:pointer;margin-top:6px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        匯入 database.json
+        <input type="file" id="imp-file" accept=".json" onchange="impDB(event)" style="display:none">
+      </label>
+      <div class="div" style="margin:.75rem 0"></div>
+      <button class="exp-btn" onclick="clearSeen(7)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+        <span>清除最近 7 天抓取記錄<span class="exp-btn-sub">舊記錄保留</span></span>
+      </button>
+      <button class="exp-btn" onclick="clearSeen(30)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+        <span>清除最近 30 天抓取記錄</span>
+      </button>
+      <button class="exp-btn" onclick="clearSeen()" style="border-color:rgba(180,100,100,.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+        <span>清除全部抓取記錄</span>
+      </button>
+      <button class="exp-btn" onclick="resetDB()" style="border-color:rgba(200,80,80,.3);color:#e08080">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        <span>完整清除資料庫<span class="exp-btn-sub">無法還原</span></span>
+      </button>
+    </div>
+
+    <!-- RIGHT: Tag Manager (full height) -->
+    <div class="panel">
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        AI Tag 管理
+      </div>
+      <input class="tm-search" id="tm-q" placeholder="搜尋 tag…" oninput="renderTagManager()">
+      <div class="tm-list" id="tm-list"></div>
+      <div class="tm-blocked" id="tm-blocked" style="display:none">
+        <div class="tm-bl-lbl">封鎖清單（AI 之後不產生）</div>
+        <div class="tm-bl-tags" id="tm-bl-tags"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bot-nav">
+  <button class="bot-tab on" data-tab="lib" onclick="go('lib')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    文獻庫
+  </button>
+  <button class="bot-tab" data-tab="fetch" onclick="go('fetch')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    抓取
+  </button>
+  <button class="bot-tab" data-tab="set" onclick="go('set')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+    設定
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+</div><!-- end #app -->
+
+<script>
+// ══ PASSWORD GATE ═══════════════════════════════
+const GATE_HASH='e3d4c5b6a2f1e8d7c9b0a1f2e3d4c5b6'; // simple obfuscation
+// Gate passes → call init; otherwise init waits
+function gateCheck(){
+  const v=document.getElementById('gate-inp').value;
+  if(v==='sela1227'){
+    document.getElementById('gate').style.display='none';
+    const app=document.getElementById('app');
+    app.style.display='flex';app.style.flexDirection='column';app.style.height='100vh';
+    sessionStorage.setItem('rd_auth','1');
+    if(!S.db)rdInit(); // only init if not already done
+  }else{
+    document.getElementById('gate-err').style.opacity='1';
+    document.getElementById('gate-inp').value='';
+    document.getElementById('gate-inp').focus();
+  }
+}
+// Auto-pass if already authenticated this session — handled at bottom of script
+
+// ══ THEMES ═════════════════════════════════════
+const THEMES={
+  nordic:{name:'北歐霧藍',dot:'#243c50',ac:'#7ac1e7',vars:{
+    '--bg':'#1a2e3e','--sur':'#243c50','--sur2':'#2e4d65','--sur3':'#385e78',
+    '--txt':'#f2f9fd','--txt2':'#c8e2f0','--mu':'#90c4da','--ter':'#5e98b4',
+    '--ac':'#7ac1e7','--acd':'rgba(122,193,231,.15)','--ach':'rgba(122,193,231,.26)',
+    '--bd':'rgba(120,190,225,.22)','--bdh':'rgba(120,190,225,.46)',
+    '--panel-bg':'#182e3e',
+  }},
+  moss:{name:'苔蘚綠',dot:'#283422',ac:'#7A9E87',vars:{
+    '--bg':'#1e2820','--sur':'#28342a','--sur2':'#324034','--sur3':'#3c4c3e',
+    '--txt':'#f0f5f0','--txt2':'#c0d4bc','--mu':'#88b090','--ter':'#5e8268',
+    '--ac':'#7A9E87','--acd':'rgba(122,158,135,.14)','--ach':'rgba(122,158,135,.26)',
+    '--bd':'rgba(100,140,112,.2)','--bdh':'rgba(100,140,112,.44)',
+    '--panel-bg':'#1a2420',
+  }},
+  milktea:{name:'奶茶',dot:'#342a1e',ac:'#C9A882',vars:{
+    '--bg':'#281e14','--sur':'#342a1e','--sur2':'#403428','--sur3':'#4c3e30',
+    '--txt':'#FAF5EE','--txt2':'#EDD9BE','--mu':'#C9A882','--ter':'#8C6A4A',
+    '--ac':'#C9A882','--acd':'rgba(201,168,130,.14)','--ach':'rgba(201,168,130,.26)',
+    '--bd':'rgba(175,142,105,.2)','--bdh':'rgba(175,142,105,.44)',
+    '--panel-bg':'#221812',
+  }},
+  terra:{name:'陶土餐廳',dot:'#2e281e',ac:'#B85C3A',vars:{
+    '--bg':'#221e18','--sur':'#2e2820','--sur2':'#3a3228','--sur3':'#463c30',
+    '--txt':'#f5f0e8','--txt2':'#d0c4ae','--mu':'#987864','--ter':'#6e5440',
+    '--ac':'#B85C3A','--acd':'rgba(184,92,58,.14)','--ach':'rgba(184,92,58,.26)',
+    '--bd':'rgba(160,78,46,.2)','--bdh':'rgba(160,78,46,.44)',
+    '--panel-bg':'#1e1a14',
+  }},
+  dustyrose:{name:'粉紅',dot:'#2e2228',ac:'#E8A0B0',vars:{
+    '--bg':'#22181c','--sur':'#2e2228','--sur2':'#3a2c34','--sur3':'#463640',
+    '--txt':'#FBF0F2','--txt2':'#E8DED8','--mu':'#C47A8A','--ter':'#8a5868',
+    '--ac':'#E8A0B0','--acd':'rgba(232,160,176,.14)','--ach':'rgba(232,160,176,.26)',
+    '--bd':'rgba(196,122,138,.2)','--bdh':'rgba(196,122,138,.44)',
+    '--panel-bg':'#1c1218',
+  }},
+  lavender:{name:'粉紫',dot:'#28263a',ac:'#B0A0D0',vars:{
+    '--bg':'#1c1a24','--sur':'#28263a','--sur2':'#32304a','--sur3':'#3c3a58',
+    '--txt':'#F4F0FA','--txt2':'#DDD0F0','--mu':'#B0A0D0','--ter':'#7A6AAA',
+    '--ac':'#B0A0D0','--acd':'rgba(176,160,208,.14)','--ach':'rgba(176,160,208,.26)',
+    '--bd':'rgba(152,136,186,.2)','--bdh':'rgba(152,136,186,.44)',
+    '--panel-bg':'#24201e',
+  }},
+  charcoal:{name:'炭黑',dot:'#222018',ac:'#E8C89A',vars:{
+    '--bg':'#171614','--sur':'#22201c','--sur2':'#2c2a26','--sur3':'#363430',
+    '--txt':'#ece8e2','--txt2':'#c0b8a8','--mu':'#8a806e','--ter':'#5e5648',
+    '--ac':'#E8C89A','--acd':'rgba(232,200,154,.14)','--ach':'rgba(232,200,154,.26)',
+    '--bd':'rgba(205,172,125,.2)','--bdh':'rgba(205,172,125,.44)',
+    '--panel-bg':'#131210',
+  }},
+};
+
+function applyTheme(id){
+  const t=THEMES[id];if(!t)return;
+  const root=document.documentElement;
+  Object.entries(t.vars).forEach(([k,v])=>root.style.setProperty(k,v));
+  S.cfg.theme=id;saveCfg();
+  renderThemeSwatches();
+}
+
+function renderThemeSwatches(){
+  const el=document.getElementById('theme-swatches');
+  if(!el)return;
+  const cur=S.cfg.theme||'nordic';
+  el.innerHTML=Object.entries(THEMES).map(([id,t])=>`
+    <button onclick="applyTheme('${id}')" title="${t.name}" style="
+      width:32px;height:32px;border-radius:50%;
+      background:${t.dot};
+      border:3px solid ${cur===id?t.ac:'transparent'};
+      outline:${cur===id?'2px solid '+t.ac:'none'};
+      outline-offset:2px;
+      cursor:pointer;transition:all .2s;
+      box-shadow:0 2px 8px rgba(0,0,0,.3);
+      position:relative;
+    " onmouseover="this.title='${t.name}'" >
+      <span style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--mu);white-space:nowrap;font-family:var(--mono)">${cur===id?t.name:''}</span>
+    </button>`).join('');
+}
+
+// ══ CONSTANTS ══════════════════════════════════
+const EU = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+const CLAUDE = 'https://api.anthropic.com/v1/messages';
+const ITEM_H = 125;
+const BUF = 6;
+
+// 癌別關鍵字 — AI tag 分類用
+const CANCER_KW = [
+  '頭頸癌','鼻咽癌','口腔癌','口咽癌','下咽癌','喉癌','唾液腺癌','甲狀腺癌',
+  '食道癌','胃癌','大腸癌','直腸癌','結腸癌','肝癌','胰臟癌','膽管癌','膽囊癌',
+  '肺癌','乳癌','前列腺癌','攝護腺癌','膀胱癌','腎癌','子宮頸癌','子宮內膜癌',
+  '卵巢癌','陰道癌','外陰癌','腦瘤','腦癌','脊椎腫瘤','淋巴瘤','白血病',
+  '多發性骨髓瘤','皮膚癌','黑色素瘤','骨肉瘤','軟組織肉瘤','兒童腫瘤',
+  '婦癌','泌尿道癌','肛門癌','轉移性腫瘤','轉移癌',
+];
+const isCancerTag = t => CANCER_KW.some(k => t.includes(k));
+
+const IF_TABLE = {
+  "Lancet":{v:98.4},"N Engl J Med":{v:96.2},"JAMA":{v:63.1},"BMJ":{v:39.0},
+  "Nat Med":{v:58.7},"Lancet Oncol":{v:51.1},"J Clin Oncol":{v:42.1},
+  "JAMA Oncol":{v:28.4},"Ann Oncol":{v:51.8},"Nat Rev Cancer":{v:72.6},
+  "Cancer Cell":{v:48.8},"Cancer Discov":{v:29.1},"Cancer Res":{v:12.5},
+  "Clin Cancer Res":{v:10.0},"Eur J Cancer":{v:8.4},"Cancer":{v:6.9},
+  "Br J Cancer":{v:7.9},"Int J Cancer":{v:5.7},"Cancers":{v:4.5},
+  "Int J Radiat Oncol Biol Phys":{v:6.9},"Radiother Oncol":{v:6.4},
+  "Radiation Oncology":{v:3.7},"Strahlenther Onkol":{v:3.9},
+  "Acta Oncol":{v:3.7},"J Radiat Res":{v:2.0},
+  "Med Phys":{v:3.8},"Phys Med Biol":{v:3.5},
+  "Head Neck":{v:3.2},"Oral Oncol":{v:5.4},
+  "J Thorac Oncol":{v:20.4},"Lung Cancer":{v:5.9},
+  "Gut":{v:24.5},"Gastroenterology":{v:25.7},"Ann Surg":{v:13.0},"Esophagus":{v:3.0},
+  "Gynecol Oncol":{v:4.7},"Blood":{v:21.0},
+  "Neuro Oncol":{v:16.4},"J Neurooncol":{v:4.2},
+  "Eur J Nucl Med Mol Imaging":{v:9.1},"J Nucl Med":{v:9.0},
+  "Radiology":{v:12.1},"Eur Radiol":{v:4.7},"Br J Radiol":{v:3.5},"Clin Nucl Med":{v:4.8},
+  "J Immunother Cancer":{v:11.0},"Cancer Immunol Res":{v:9.5},
+  "Front Oncol":{v:3.5},"BMC Cancer":{v:4.0},"Oncologist":{v:4.8},
+  "J Natl Cancer Inst":{v:11.5},"Support Care Cancer":{v:3.5},
+  "J Natl Compr Canc Netw":{v:14.8},"Cancer Med":{v:3.5},
+  "Nat Rev Drug Discov":{v:120.1},"J Clin Invest":{v:15.9},
+};
+function getIF(j){
+  if(!j)return null;
+  if(IF_TABLE[j])return IF_TABLE[j].v;
+  const jl=j.toLowerCase();
+  for(const[k,v]of Object.entries(IF_TABLE)){
+    if(jl.includes(k.toLowerCase())||k.toLowerCase().includes(jl))return v.v;
+  }
+  return null;
+}
+
+const JOURNAL_ZH={
+  "Lancet":"柳葉刀","N Engl J Med":"新英格蘭醫學期刊","JAMA":"美國醫學會期刊",
+  "BMJ":"英國醫學期刊","Nat Med":"自然醫學","Nature Medicine":"自然醫學",
+  "Lancet Oncol":"柳葉刀腫瘤學","J Clin Oncol":"臨床腫瘤學期刊",
+  "JAMA Oncol":"美國醫學會腫瘤學","Ann Oncol":"腫瘤學年報",
+  "Nat Rev Cancer":"自然癌症評論","Cancer Cell":"癌細胞",
+  "Cancer Discov":"癌症探索","Cancer Res":"癌症研究",
+  "Clin Cancer Res":"臨床癌症研究","Eur J Cancer":"歐洲癌症期刊",
+  "Cancer":"癌症","Br J Cancer":"英國癌症期刊","Int J Cancer":"國際癌症期刊",
+  "Cancers":"癌症（MDPI）","J Natl Cancer Inst":"美國國家癌症研究院期刊",
+  "J Natl Compr Canc Netw":"美國癌症綜合網絡期刊","Cancer Med":"癌症醫學",
+  "Oncologist":"腫瘤醫師",
+  "Int J Radiat Oncol Biol Phys":"國際放射腫瘤生物物理期刊（Red Journal）",
+  "Radiother Oncol":"放射治療與腫瘤學","Radiation Oncology":"放射腫瘤學",
+  "Strahlenther Onkol":"放射腫瘤學（德）","Acta Oncol":"腫瘤學學報",
+  "J Radiat Res":"放射研究期刊","Med Phys":"醫學物理","Phys Med Biol":"物理醫學與生物學",
+  "Head Neck":"頭頸部","Oral Oncol":"口腔腫瘤學",
+  "J Thorac Oncol":"胸腔腫瘤學期刊","Lung Cancer":"肺癌",
+  "Gut":"腸胃","Gastroenterology":"腸胃病學","Ann Surg":"外科學年報",
+  "Esophagus":"食道","Eur J Cardiothorac Surg":"歐洲心胸外科期刊",
+  "Gynecol Oncol":"婦科腫瘤學","Blood":"血液學",
+  "Neuro Oncol":"神經腫瘤學","J Neurooncol":"神經腫瘤學期刊",
+  "Eur J Nucl Med Mol Imaging":"歐洲核醫學與分子影像",
+  "J Nucl Med":"核醫學期刊","Clin Nucl Med":"臨床核醫學",
+  "Radiology":"放射學","Eur Radiol":"歐洲放射學","Br J Radiol":"英國放射學期刊",
+  "J Immunother Cancer":"癌症免疫治療期刊","Cancer Immunol Res":"癌症免疫研究",
+  "Front Immunol":"免疫學前沿","Support Care Cancer":"癌症支持性照護",
+  "J Cancer Res Ther":"癌症研究與治療期刊","BMC Cancer":"BMC 癌症",
+  "Front Oncol":"腫瘤學前沿","Cancer Res Commun":"癌症研究通訊",
+  "Curr Opin Oncol":"當前腫瘤學觀點","Commun Med":"通訊醫學",
+  "JPEN J Parenter Enteral Nutr":"靜脈與腸道營養期刊",
+  "Clin Oral Investig":"臨床口腔研究","BMC Oral Health":"BMC 口腔健康",
+  "Drug Deliv Transl Res":"藥物遞送轉化研究","Lab Chip":"晶片實驗室",
+  "Eur J Oncol Nurs":"歐洲腫瘤護理期刊","Future Oncol":"腫瘤學未來",
+  "Oncol Lett":"腫瘤學快報","Thyroid":"甲狀腺",
+  "Otolaryngol Head Neck Surg":"耳鼻喉頭頸外科","Acta Biochim Biophys Sin":"生物化學與生物物理學報",
+};
+function getJournalZH(j){
+  if(!j)return null;
+  if(JOURNAL_ZH[j])return JOURNAL_ZH[j];
+  for(const[k,v]of Object.entries(JOURNAL_ZH)){
+    if(j.includes(k)||k.includes(j))return v;
+  }
+  return null;
+}
+
+
+// ══ STATE ═══════════════════════════════════════
+const S={
+  dir:null, cfg:null, db:null,
+  tab:'lib', sel:null,
+  filtered:[], filters:{status:[],purpose:[],ht:[],ai:[],star:false},
+  abCache:{}, lastApi:0, gctr:0,
+};
+function defCfg(){return{claude_key:'',claude_on:true,groups:[{id:1,name:'頭頸放療',query:'head and neck cancer radiotherapy',active:true},{id:2,name:'食道癌放療',query:'esophageal cancer radiotherapy',active:false}],days:7,max:100,sort:'pub+date',blocked_tags:[],auto_clear_days:30,last_purge_date:'',theme:'nordic'}}
+function defDb(){return{v:1,articles:[],seen:[],hth:[]}}
+
+// ══ INDEXEDDB ════════════════════════════════════
+async function idb(mode,key,val){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open('radonc_v2',1);
+    r.onupgradeneeded=e=>e.target.result.createObjectStore('kv');
+    r.onsuccess=e=>{
+      const db=e.target.result;
+      const tx=db.transaction('kv',mode);
+      const st=tx.objectStore('kv');
+      const req=mode==='readwrite'?st.put(val,key):st.get(key);
+      req.onsuccess=()=>res(req.result);
+      req.onerror=()=>rej(req.error);
+    };
+    r.onerror=()=>rej(r.error);
+  });
+}
+async function dbGet(k){return idb('readonly',k)}
+async function dbPut(k,v){return idb('readwrite',k,v)}
+
+// ══ FILE SYSTEM (optional, desktop Chrome) ══════
+async function connectFolder(){
+  if(!window.showDirectoryPicker){toast('資料夾同步需要桌機 Chrome，手機使用 IndexedDB 儲存');return}
+  try{
+    S.dir=await window.showDirectoryPicker({mode:'readwrite'});
+    await dbPut('dirHandle',S.dir);
+    const btn=document.getElementById('sync-btn');
+    btn.classList.add('on');
+    document.getElementById('sync-lbl').textContent=S.dir.name;
+    toast('已連接資料夾：'+S.dir.name);
+    // Write current data to files
+    await syncToFiles();
+  }catch(e){if(e.name!=='AbortError')toast('無法連接：'+e.message)}
+}
+async function tryRestoreDir(){
+  if(!window.showDirectoryPicker)return;
+  try{
+    const h=await dbGet('dirHandle');
+    if(!h)return;
+    const p=await h.requestPermission({mode:'readwrite'});
+    if(p==='granted'){
+      S.dir=h;
+      document.getElementById('sync-btn').classList.add('on');
+      document.getElementById('sync-lbl').textContent=h.name;
+    }
+  }catch(e){}
+}
+async function writeFile(name,data){
+  if(!S.dir)return;
+  try{
+    const fh=await S.dir.getFileHandle(name,{create:true});
+    const w=await fh.createWritable();
+    await w.write(JSON.stringify(data,null,2));
+    await w.close();
+  }catch(e){console.warn('writeFile:',e)}
+}
+async function syncToFiles(){
+  if(!S.dir)return;
+  await writeFile('config.json',S.cfg);
+  await writeFile('database.json',S.db);
+}
+
+// ══ SAVE / LOAD ══════════════════════════════════
+async function saveCfg(){
+  await dbPut('config',S.cfg);
+  if(S.dir)await writeFile('config.json',S.cfg);
+}
+async function saveDB(){
+  await dbPut('database',S.db);
+  if(S.dir)await writeFile('database.json',S.db);
+  updateDbInfo();
+}
+
+// ══ NAVIGATION ════════════════════════════════════
+function go(tab){
+  S.tab=tab;
+  const views={lib:'v-lib',fetch:'v-fetch',set:'v-set'};
+  Object.entries(views).forEach(([t,id])=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(t!==tab){el.style.display='none';el.style.gridTemplateColumns='';return;}
+    const wide=window.innerWidth>=640;
+    if(t==='lib'){el.style.display='flex';el.style.flexDirection='column';}
+    else if(t==='fetch'&&wide){el.style.display='grid';el.style.gridTemplateColumns='1fr 320px';}
+    else if(t==='set'&&wide){el.style.display='grid';el.style.gridTemplateColumns='360px 1fr';}
+    else{el.style.display='flex';el.style.flexDirection='column';el.style.gridTemplateColumns='';}
+  });
+  document.querySelectorAll('.hdr-tab,.btab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  if(tab==='fetch')renderGI();
+  if(tab==='set'){renderTagManager();renderThemeSwatches();}
+}
+
+// ══ VIRTUAL SCROLL ════════════════════════════════
+const VS={nodes:{}};
+function vsRender(){
+  const scroll=document.getElementById('list-scroll');
+  const inner=document.getElementById('vs-inner');
+  const items=S.filtered;
+  const empty=document.getElementById('list-empty');
+  empty.style.display=items.length===0?'flex':'none';
+  inner.style.height=(items.length*ITEM_H)+'px';
+  document.getElementById('list-cnt').textContent=items.length+' 篇';
+  const st=scroll.scrollTop,h=scroll.clientHeight;
+  const s=Math.max(0,Math.floor(st/ITEM_H)-BUF);
+  const e=Math.min(items.length,Math.ceil((st+h)/ITEM_H)+BUF);
+  Object.keys(VS.nodes).forEach(i=>{
+    if(+i<s||+i>=e){VS.nodes[i].remove();delete VS.nodes[i];}
+    else VS.nodes[i].classList.toggle('sel',items[+i].pmid===S.sel);
+  });
+  for(let i=s;i<e;i++){
+    if(!VS.nodes[i]){
+      const el=mkCard(items[i],i);
+      el.style.top=(i*ITEM_H)+'px';
+      inner.appendChild(el);VS.nodes[i]=el;
+    }
+  }
+}
+function vsReset(){Object.values(VS.nodes).forEach(n=>n.remove());VS.nodes={};vsRender();}
+document.getElementById('list-scroll').addEventListener('scroll',vsRender,{passive:true});
+
+function mkCard(a,i){
+  const d=document.createElement('div');
+  d.className='acard'+(a.pmid===S.sel?' sel':'');
+  d.onclick=()=>openPanel(a.pmid);
+  const ifv=getIF(a.journal);
+  const pdots=(a.purpose_tags||[]).map(p=>`<div class="pdot pdot-${p}"></div>`).join('');
+  const sc=a.status||'unread';
+  const aiTagsHtml=(a.ai_tags||[]).slice(0,4).map(t=>
+    `<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:rgba(122,193,231,.18);color:#a8d8f0;border:1px solid rgba(122,193,231,.25);font-family:var(--mono);white-space:nowrap">${esc(t)}</span>`
+  ).join('');
+  const titleBlock=a.title_zh
+    ?`<div style="font-size:13px;font-weight:500;line-height:1.4;color:var(--txt);margin-bottom:2px">${esc(a.title_zh)}</div>
+      <div style="font-size:11px;line-height:1.4;color:var(--mu);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${esc(a.title)}</div>`
+    :`<div style="font-size:13px;line-height:1.45;color:var(--txt);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(a.title)}</div>`;
+  d.innerHTML=`
+    <div class="acard-body">
+      <div class="acard-num">#${i+1} · ${a.pmid} ${(a.source_groups||[]).map(g=>`<span style="opacity:.6">[${g}]</span>`).join('')}</div>
+      ${titleBlock}
+      <div class="acard-meta">
+        <span class="acard-j">${esc(a.journal)}</span>
+        <span class="acard-d">${a.pub_date||''}</span>
+        ${ifv?`<span class="acard-if">IF ${ifv}</span>`:''}
+      </div>
+      ${aiTagsHtml?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${aiTagsHtml}</div>`:''}
+    </div>
+    <div class="acard-r">
+      ${a.ai_star?`<svg width="12" height="12" viewBox="0 0 24 24" fill="#f0c040" stroke="#f0c040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" title="AI 強力推薦"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`:''}
+      <div class="sdot sdot-${sc}"></div>
+      <div class="pdots">${pdots}</div>
+    </div>`;
+  return d;
+}
+
+// ══ FILTERS ═══════════════════════════════════════
+function applyF(){
+  if(!S.db)return;
+  const q=(document.getElementById('q-inp').value||'').toLowerCase();
+  const{status,purpose,ht,ai,star}=S.filters;
+  S.filtered=S.db.articles.filter(a=>{
+    if(status.length&&!status.includes(a.status||'unread'))return false;
+    if(purpose.length&&!purpose.every(p=>(a.purpose_tags||[]).includes(p)))return false;
+    if(ht.length&&!ht.every(h=>(a.hashtags||[]).includes(h)))return false;
+    if(ai.length&&!ai.every(t=>(a.ai_tags||[]).includes(t)))return false;
+    if(star&&!a.ai_star)return false;
+    if(q&&!a.title.toLowerCase().includes(q)&&!(a.journal||'').toLowerCase().includes(q)&&!a.pmid.includes(q))return false;
+    return true;
+  });
+  vsReset();
+}
+function pickFilter(btn,type,val){
+  const already=btn.classList.contains('on');
+  // Deselect all f1 chips
+  document.querySelectorAll('[data-fk="f1"]').forEach(b=>{
+    b.classList.remove('on');
+    if(b.id==='chip-star'){b.style.background='';b.style.borderColor='rgba(240,192,64,.25)';b.style.color='#c8a030';}
+  });
+  S.filters.status=[];S.filters.purpose=[];S.filters.star=false;
+  const clearBtn=document.getElementById('filter-clear-btn');
+  if(already){
+    if(clearBtn)clearBtn.style.display='none';
+  }else{
+    btn.classList.add('on');
+    if(type==='status')S.filters.status=[val];
+    else if(type==='purpose')S.filters.purpose=[val];
+    else if(type==='star')S.filters.star=true;
+    if(btn.id==='chip-star'){btn.style.background='rgba(240,192,64,.18)';btn.style.borderColor='rgba(240,192,64,.5)';btn.style.color='#f0c040';}
+    if(clearBtn)clearBtn.style.display='block';
+  }
+  applyF();
+}
+function clearFilter1(){
+  document.querySelectorAll('[data-fk="f1"]').forEach(b=>{
+    b.classList.remove('on');
+    if(b.id==='chip-star'){b.style.background='';b.style.borderColor='rgba(240,192,64,.25)';b.style.color='#c8a030';}
+  });
+  S.filters.status=[];S.filters.purpose=[];S.filters.star=false;
+  const clearBtn=document.getElementById('filter-clear-btn');
+  if(clearBtn)clearBtn.style.display='none';
+  applyF();
+}
+// Legacy no-op (HTML refs already updated)
+function toggleStarFilter(){}
+function toggleChip(){}
+
+function renderHtChips(){
+  const el=document.getElementById('ht-chips');
+  if(!S.db){el.innerHTML='';return;}
+  const all=[...new Set(S.db.articles.flatMap(a=>a.hashtags||[]))];
+  el.innerHTML=all.map(t=>`<button class="chip chip-ht" data-ht="${t}" onclick="togHtFilter(this,'${t}')">#${t}</button>`).join('');
+}
+function renderAiChips(){
+  if(!S.db)return;
+  const freq={};
+  S.db.articles.forEach(a=>(a.ai_tags||[]).forEach(t=>{freq[t]=(freq[t]||0)+1;}));
+  const sorted=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
+
+  const cancerTags=sorted.filter(t=>isCancerTag(t));
+  const topicTags=sorted.filter(t=>!isCancerTag(t)).slice(0,25);
+
+  function renderChips(el,tags){
+    if(!el)return;
+    el.innerHTML=tags.map(t=>`<button class="chip chip-ai${S.filters.ai.includes(t)?' on':''}" onclick="togAiFilter(this,'${esc(t)}')" title="${freq[t]}篇">${esc(t)}</button>`).join('');
+  }
+
+  const cRow=document.getElementById('ai-tag-row');
+  const tRow=document.getElementById('ai-topic-row');
+  if(cancerTags.length){cRow.style.display='block';renderChips(document.getElementById('ai-cancer-chips'),cancerTags);}
+  else cRow.style.display='none';
+  if(topicTags.length){tRow.style.display='block';renderChips(document.getElementById('ai-topic-chips'),topicTags);}
+  else tRow.style.display='none';
+}
+function togAiFilter(btn,t){
+  btn.classList.toggle('on');
+  if(btn.classList.contains('on'))S.filters.ai.push(t);
+  else S.filters.ai=S.filters.ai.filter(x=>x!==t);
+  applyF();
+}
+function togHtFilter(btn,t){
+  btn.classList.toggle('on');
+  if(btn.classList.contains('on'))S.filters.ht.push(t);
+  else S.filters.ht=S.filters.ht.filter(h=>h!==t);
+  applyF();
+}
+
+// ══ PANEL ══════════════════════════════════════════
+function openPanel(pmid){
+  S.sel=pmid;
+  // Show content, hide empty state
+  document.getElementById('sp-empty').style.display='none';
+  const content=document.getElementById('sp-content');
+  content.style.display='flex';
+  // Mobile: slide in
+  if(window.innerWidth<640) document.getElementById('sp').classList.add('on');
+  // Desktop: back button hidden (panel always visible)
+  const backBtn=document.getElementById('sp-back-btn');
+  if(backBtn) backBtn.style.display=window.innerWidth<640?'flex':'none';
+  vsRender();
+  const a=S.db.articles.find(x=>x.pmid===pmid);
+  if(!a)return;
+  if((a.status||'unread')==='unread'){a.status='read';saveDB();vsRender();}
+  // Fill
+  document.getElementById('sp-ttl').textContent=a.title_zh||a.title;
+  // English subtitle if Chinese exists
+  const spTtlEl=document.getElementById('sp-ttl');
+  if(a.title_zh){
+    spTtlEl.innerHTML=`${esc(a.title_zh)}<div style="font-size:12px;color:var(--mu);font-weight:400;margin-top:5px;line-height:1.5">${esc(a.title)}</div>`;
+  }else{
+    spTtlEl.textContent=a.title;
+  }
+  // Journal — use short name (source), strip PubMed disambiguation parenthetical
+  const jrnlEl=document.getElementById('sp-jrnl');
+  const jName=a.journal||(a.full_journal||'').replace(/\s*\([^)]*\)\s*$/,'').trim();
+  jrnlEl.textContent=jName;
+  document.getElementById('sp-date').textContent=a.pub_date||'';
+  document.getElementById('sp-pmid').textContent='PMID '+a.pmid;
+  document.getElementById('sp-auth').textContent=a.authors||'';
+  document.getElementById('sp-link').href=a.url||`https://pubmed.ncbi.nlm.nih.gov/${pmid}/`;
+  const ifv=getIF(a.journal);
+  document.getElementById('sp-if').textContent=ifv?`IF ${ifv} (2024)`:'';
+  // Scroll panel to top for new article
+  const spScroll=document.querySelector('.sp-scroll');
+  if(spScroll)spScroll.scrollTop=0;  // AI tags — deletable
+  renderSpAiTags(a);
+  if(document.getElementById('aitag-inp'))document.getElementById('aitag-inp').value='';
+  updateMarkUI(a);
+  renderHtPills(a);
+  document.getElementById('ht-inp').value='';
+  renderHtSug();
+  document.getElementById('notes-ta').value=a.notes||'';
+  loadAbs(a);
+}
+function closePanel(){
+  S.sel=null;
+  document.getElementById('sp').classList.remove('on');
+  document.getElementById('sp-empty').style.display='flex';
+  document.getElementById('sp-content').style.display='none';
+  vsRender();
+}
+async function loadAbs(a){
+  const el=document.getElementById('sp-abs');
+  el.className='sp-abs loading';el.textContent='載入中…';
+  if(S.abCache[a.pmid]){el.className='sp-abs';el.textContent=S.abCache[a.pmid];return;}
+  try{
+    await apiWait();
+    const r=await fetch(`${EU}efetch.fcgi?db=pubmed&id=${a.pmid}&retmode=xml&rettype=abstract&tool=radonc-digest`);
+    const t=await r.text();
+    const xml=new DOMParser().parseFromString(t,'text/xml');
+    const absEl=xml.querySelector('AbstractText');
+    const abs=absEl?absEl.textContent.trim():'（此文章無 Abstract）';
+    S.abCache[a.pmid]=abs;
+    el.className='sp-abs';el.textContent=abs;
+  }catch(e){el.className='sp-abs';el.textContent='無法載入 Abstract';}
+}
+function updateMarkUI(a){
+  const st=a.status||'unread';
+  document.querySelectorAll('.sbtn').forEach(b=>{
+    b.classList.toggle('on', b.dataset.s===st);
+  });
+  document.querySelectorAll('.pbtn').forEach(b=>{
+    b.classList.toggle('on', (a.purpose_tags||[]).includes(b.dataset.p));
+  });
+}
+function setS(s){
+  if(!S.sel)return;
+  const a=S.db.articles.find(x=>x.pmid===S.sel);
+  if(!a)return;
+  if(a.status===s)return; // 已是此狀態，不做任何事
+  a.status=s;
+  if(s==='deleted'){
+    a.deleted_at=new Date().toISOString().split('T')[0];
+  }else{
+    delete a.deleted_at;
+  }
+  updateMarkUI(a);
+  vsRender();
+  saveDB();
+}
+function togP(p){
+  if(!S.sel)return;
+  const a=S.db.articles.find(x=>x.pmid===S.sel);
+  if(!a)return;
+  if(!a.purpose_tags)a.purpose_tags=[];
+  if(a.purpose_tags.includes(p))a.purpose_tags=a.purpose_tags.filter(x=>x!==p);
+  else a.purpose_tags.push(p);
+  updateMarkUI(a);vsRender();saveDB();
+}
+
+// ══ HASHTAGS ═══════════════════════════════════════
+function addHT(){
+  const inp=document.getElementById('ht-inp');
+  const raw=inp.value.trim().replace(/^#/,'');
+  if(!raw||!S.sel)return;
+  const a=S.db.articles.find(x=>x.pmid===S.sel);
+  if(!a)return;
+  if(!a.hashtags)a.hashtags=[];
+  if(!a.hashtags.includes(raw)){
+    a.hashtags.push(raw);
+    if(!S.db.hth.includes(raw)){S.db.hth.unshift(raw);S.db.hth=S.db.hth.slice(0,50);}
+    renderHtPills(a);renderHtSug();renderHtChips();vsRender();saveDB();
+  }
+  inp.value='';
+}
+function rmHT(t){
+  if(!S.sel)return;
+  const a=S.db.articles.find(x=>x.pmid===S.sel);
+  if(!a)return;
+  a.hashtags=(a.hashtags||[]).filter(h=>h!==t);
+  renderHtPills(a);vsRender();saveDB();
+}
+function renderHtPills(a){
+  document.getElementById('ht-pills').innerHTML=(a.hashtags||[]).map(t=>
+    `<span class="ht-pill">#${esc(t)}<button class="ht-x" onclick="rmHT('${t}')">&times;</button></span>`).join('');
+}
+function renderHtSug(){
+  const a=S.db?.articles.find(x=>x.pmid===S.sel);
+  const cur=a?.hashtags||[];
+  const sug=(S.db?.hth||[]).filter(h=>!cur.includes(h)).slice(0,8);
+  document.getElementById('ht-sug').innerHTML=sug.map(t=>
+    `<button class="ht-sug" onclick="document.getElementById('ht-inp').value='${t}';addHT()">#${t}</button>`).join('');
+}
+function saveNotes(){
+  if(!S.sel)return;
+  const a=S.db.articles.find(x=>x.pmid===S.sel);
+  if(!a)return;
+  a.notes=document.getElementById('notes-ta').value;
+  clearTimeout(S._nt);S._nt=setTimeout(()=>saveDB(),800);
+}
+
+// ══ NCBI ════════════════════════════════════════════
+async function apiWait(){const w=420-(Date.now()-S.lastApi);if(w>0)await new Promise(r=>setTimeout(r,w));S.lastApi=Date.now();}
+async function esearch(q,days,max,sort){
+  await apiWait();
+  const r=await fetch(`${EU}esearch.fcgi?db=pubmed&term=${encodeURIComponent(q)}&reldate=${days}&datetype=pdat&sort=${encodeURIComponent(sort)}&retmax=${max}&retmode=json&tool=radonc-digest`);
+  if(!r.ok)throw new Error('esearch HTTP '+r.status);
+  return(await r.json()).esearchresult?.idlist||[];
+}
+async function esummary(pmids){
+  const out={};
+  for(let i=0;i<pmids.length;i+=200){
+    await apiWait();
+    const chunk=pmids.slice(i,i+200);
+    const r=await fetch(`${EU}esummary.fcgi?db=pubmed&id=${chunk.join(',')}&retmode=json&tool=radonc-digest`);
+    if(!r.ok)throw new Error('esummary HTTP '+r.status);
+    const d=await r.json();
+    if(d.result)chunk.forEach(p=>{if(d.result[p]?.uid)out[p]=parseDoc(d.result[p]);});
+  }
+  return out;
+}
+function parseDoc(doc){
+  const au=(doc.authors||[]).slice(0,3).map(a=>a.name);
+  if((doc.authors||[]).length>3)au.push('et al.');
+  return{pmid:doc.uid,title:(doc.title||'').replace(/\.$/,''),authors:au.join(', '),
+    journal:doc.source||'',full_journal:doc.fulljournalname||doc.source||'',
+    pub_date:doc.pubdate||doc.epubdate||'',
+    url:`https://pubmed.ncbi.nlm.nih.gov/${doc.uid}/`,
+    source_groups:[],status:'unread',purpose_tags:[],hashtags:[],ai_tags:[],ai_star:false,title_zh:'',notes:'',
+    added_at:new Date().toISOString().split('T')[0]};
+}
+
+// ══ CLAUDE ══════════════════════════════════════════
+async function autoTag(articles){
+  if(!S.cfg.claude_on||!S.cfg.claude_key)return;
+  for(let i=0;i<articles.length;i+=15){
+    const batch=articles.slice(i,i+15);
+    setFS(`AI 翻譯 + 分類… ${Math.min(i+15,articles.length)}/${articles.length}`);
+    try{
+      const blocked=(S.cfg.blocked_tags||[]);
+      const blockNote=blocked.length?`\n請勿使用以下 tag：${blocked.join('、')}`:'';
+      // Collect existing tags sorted by frequency
+      const freq={};
+      (S.db?.articles||[]).forEach(a=>(a.ai_tags||[]).forEach(t=>{freq[t]=(freq[t]||0)+1;}));
+      const existingTags=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]).filter(t=>!blocked.includes(t));
+      const existNote=existingTags.length
+        ?`\n\n現有 tag 清單（請優先從中選用，避免產生相似的新 tag）：\n${existingTags.join('、')}`
+        :'';
+      const list=batch.map((a,j)=>`${j+1}. PMID:${a.pmid} | ${a.title}`).join('\n');
+      const r=await fetch(CLAUDE,{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':S.cfg.claude_key,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:
+          `以下是放腫科 PubMed 文章，請為每篇：
+1. 翻譯標題為簡潔中文（保留專業術語，如 VMAT、SBRT 等縮寫直接保留）
+2. 產生 3-6 個中文分類標籤（癌別、治療方式、研究類型、主題等）${existNote}${blockNote}
+3. 如果這篇具有特別強的臨床意義、高影響力研究設計（如 Phase 3 RCT、大型 meta-analysis）或直接改變臨床實踐的重要性，加上 "star": true。這是選填的，不強制，只有真正值得強力推薦的才標。
+
+如果現有 tag 清單中有合適的，直接使用；若無適合的才新增新 tag。
+
+${list}
+
+只回傳 JSON，格式如下，不要其他文字：
+{"results":[{"pmid":"...","title_zh":"中文標題","tags":["標籤1","標籤2"],"star":false}]}`}]})
+      });
+      if(!r.ok){
+        const err=await r.json().catch(()=>({}));
+        throw new Error(`API 錯誤 ${r.status}：${err.error?.message||r.statusText}`);
+      }
+      const data=await r.json();
+      if(data.content?.[0]?.text){
+        const parsed=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+        parsed.results?.forEach(res=>{
+          const a=batch.find(x=>x.pmid===res.pmid);
+          if(a){
+            a.ai_tags=res.tags||[];
+            if(res.title_zh)a.title_zh=res.title_zh;
+            a.ai_star=res.star===true;
+          }
+        });
+      }
+    }catch(e){
+      console.warn('Claude autoTag error:',e);
+      setFS('⚠ AI 處理失敗：'+e.message);
+      return;
+    }
+  }
+}
+
+// ══ FETCH WORKFLOW ════════════════════════════════
+function setFS(m){document.getElementById('f-status').textContent=m;}
+function setFP(p){
+  document.getElementById('f-prog').style.width=p+'%';
+  document.getElementById('f-prog-wrap').style.display=p>0?'block':'none';
+}
+async function doFetch(){
+  if(!S.db){toast('先載入資料庫');return;}
+  const active=S.cfg.groups.filter(g=>g.active&&g.query.trim());
+  if(!active.length){toast('請啟用至少一個群組');return;}
+  const btn=document.getElementById('run-btn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="loader"></div> 抓取中…';
+  setFP(5);
+  S.cfg.groups.forEach(g=>{const e=document.getElementById('gh-'+g.id);if(e){e.textContent='';e.className='gi-hits';}});
+  const days=document.getElementById('f-days').value;
+  const max=document.getElementById('f-max').value;
+  const sort=document.getElementById('f-sort').value;
+  S.cfg.days=+days;S.cfg.max=+max;S.cfg.sort=sort;
+  try{
+    const pmMap={};
+    for(let i=0;i<active.length;i++){
+      const g=active[i];
+      setFS(`搜尋 ${i+1}/${active.length}：${g.name}…`);
+      setFP(Math.round(i/active.length*40)+5);
+      try{
+        const pmids=await esearch(g.query,days,max,sort);
+        const e=document.getElementById('gh-'+g.id);
+        if(e){e.textContent=`找到 ${pmids.length} 篇`;e.className='gi-hits on';}
+        pmids.forEach(p=>{if(!pmMap[p])pmMap[p]=[];pmMap[p].push(g.name);});
+      }catch(e){const el=document.getElementById('gh-'+g.id);if(el){el.textContent='錯誤：'+e.message;el.className='gi-hits err on';}}
+    }
+    // seen[] supports both legacy string and new {p,d} object format
+    const seen=new Set(S.db.seen.map(e=>typeof e==='string'?e:e.p));
+    const newP=Object.keys(pmMap).filter(p=>!seen.has(p));
+    setFS(`共 ${Object.keys(pmMap).length} 篇，${newP.length} 篇為新文章`);setFP(55);
+    if(!newP.length){toast('沒有新文章');return;}
+    const amap=await esummary(newP);setFP(75);
+    const today=new Date().toISOString().split('T')[0];
+    const newA=[];
+    newP.forEach(p=>{if(amap[p]){amap[p].source_groups=pmMap[p];newA.push(amap[p]);S.db.seen.push({p,d:today});}});
+    if(S.cfg.claude_on&&S.cfg.claude_key)await autoTag(newA);
+    setFP(90);
+    S.db.articles=[...newA,...S.db.articles];
+    await saveDB();await saveCfg();
+    setFP(100);setFS(`完成！新增 ${newA.length} 篇`);
+    toast(`新增 ${newA.length} 篇`);
+    applyF();renderHtChips();renderAiChips();
+  }catch(e){setFS('錯誤：'+e.message);console.error(e);}
+  finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>開始抓取';
+    setTimeout(()=>setFP(0),2000);
+  }
+}
+
+// ══ GROUPS ════════════════════════════════════════
+function renderGI(){
+  const el=document.getElementById('gi-list');el.innerHTML='';
+  S.cfg.groups.forEach(g=>{
+    const d=document.createElement('div');
+    d.className='gi'+(g.active?'':' off');d.id='gid-'+g.id;
+    d.innerHTML=`
+      <div class="gi-l">
+        <button class="tog${g.active?' on':''}" onclick="togGI(${g.id})"></button>
+        <button class="gi-del" onclick="delGI(${g.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+      <div class="gi-r">
+        <input class="gi-name" value="${esc(g.name)}" oninput="updGI(${g.id},'name',this.value)">
+        <textarea class="gi-q" oninput="updGI(${g.id},'query',this.value)">${esc(g.query)}</textarea>
+        <div class="gi-hits" id="gh-${g.id}"></div>
+      </div>`;
+    el.appendChild(d);
+  });
+}
+function addGI(){S.gctr++;S.cfg.groups.push({id:S.gctr,name:'新群組',query:'',active:true});renderGI();saveCfg();}
+function delGI(id){if(S.cfg.groups.length<=1){toast('至少保留一個群組');return;}S.cfg.groups=S.cfg.groups.filter(g=>g.id!==id);renderGI();saveCfg();}
+function togGI(id){const g=S.cfg.groups.find(g=>g.id===id);if(g){g.active=!g.active;renderGI();saveCfg();}}
+function updGI(id,f,v){const g=S.cfg.groups.find(g=>g.id===id);if(g){g[f]=v;saveCfg();}}
+
+// ══ SETTINGS ══════════════════════════════════════
+function togAI(){
+  S.cfg.claude_on=!S.cfg.claude_on;
+  document.getElementById('ai-tog').classList.toggle('on',S.cfg.claude_on);
+  saveCfg();
+}
+function keyEdit(){
+  document.getElementById('key-locked').style.display='none';
+  const row=document.getElementById('key-edit-row');
+  row.style.display='flex';
+  const inp=document.getElementById('key-inp');
+  inp.value=S.cfg.claude_key||'';
+  setTimeout(()=>inp.focus(),50);
+}
+function keySave(){
+  const v=document.getElementById('key-inp').value.trim();
+  S.cfg.claude_key=v;
+  saveCfg();keyCancel();toast('API Key 已儲存');
+}
+function keyCancel(){
+  document.getElementById('key-edit-row').style.display='none';
+  document.getElementById('key-locked').style.display='flex';
+  updateKeyDisplay();
+}
+function updateKeyDisplay(){
+  const el=document.getElementById('key-display');
+  if(!el)return;
+  const k=S.cfg.claude_key||'';
+  if(!k){el.textContent='尚未設定';el.style.color='var(--ter)';el.style.letterSpacing='normal';return;}
+  el.textContent=k.slice(0,10)+'●'.repeat(10);
+  el.style.color='var(--mu)';el.style.letterSpacing='1px';
+}
+function saveKey(){keySave();}
+
+// ══ AI TAG — SINGLE ARTICLE ══
+function renderSpAiTags(a){
+  const el=document.getElementById('sp-aitags');
+  if(!el)return;
+  el.innerHTML=(a.ai_tags||[]).map(t=>
+    `<span class="aitag-x">${esc(t)}<button class="aitag-xbtn" onclick="rmAiTag('${esc(t)}')" title="從這篇移除">&times;</button></span>`
+  ).join(' ');
+}
+function rmAiTag(t){
+  if(!S.sel)return;
+  const a=S.db.articles.find(x=>x.pmid===S.sel);
+  if(!a)return;
+  a.ai_tags=(a.ai_tags||[]).filter(x=>x!==t);
+  renderSpAiTags(a);
+  vsReset();renderAiChips();saveDB();
+}
+function addAiTag(){
+  const inp=document.getElementById('aitag-inp');
+  const t=(inp.value||'').trim();
+  if(!t||!S.sel)return;
+  const a=S.db.articles.find(x=>x.pmid===S.sel);
+  if(!a)return;
+  if(!a.ai_tags)a.ai_tags=[];
+  if(!a.ai_tags.includes(t)){
+    a.ai_tags.push(t);
+    renderSpAiTags(a);
+    vsReset();renderAiChips();saveDB();
+  }
+  inp.value='';
+}
+
+// ══ TAG MANAGER — GLOBAL ══
+function renderTagManager(){
+  const q=(document.getElementById('tm-q')?.value||'').toLowerCase();
+  const freq={};
+  (S.db?.articles||[]).forEach(a=>(a.ai_tags||[]).forEach(t=>{freq[t]=(freq[t]||0)+1;}));
+  let tags=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
+  if(q)tags=tags.filter(t=>t.toLowerCase().includes(q));
+
+  const list=document.getElementById('tm-list');
+  if(!list)return;
+  list.innerHTML=tags.map(t=>`
+    <div class="tm-row">
+      <span class="tm-tag">${esc(t)}</span>
+      <span class="tm-cnt">${freq[t]}篇</span>
+      <div class="tm-acts">
+        <button class="tm-btn" onclick="tmRename('${esc(t)}')">改名</button>
+        <button class="tm-btn" onclick="tmMerge('${esc(t)}')">合併</button>
+        <button class="tm-btn red" onclick="tmDelete('${esc(t)}')">刪除</button>
+        <button class="tm-btn amber" onclick="tmBlock('${esc(t)}')">封鎖</button>
+      </div>
+    </div>`).join('');
+
+  // Blocked list
+  const blocked=S.cfg.blocked_tags||[];
+  const blkSection=document.getElementById('tm-blocked');
+  const blkTags=document.getElementById('tm-bl-tags');
+  if(blocked.length){
+    blkSection.style.display='block';
+    blkTags.innerHTML=blocked.map(t=>
+      `<span class="tm-bl-chip">${esc(t)}<button class="tm-bl-x" onclick="tmUnblock('${esc(t)}')">&times;</button></span>`
+    ).join('');
+  }else{blkSection.style.display='none';}
+}
+
+function tmRename(oldTag){
+  const newTag=prompt(`將「${oldTag}」改名為：`, oldTag);
+  if(!newTag||newTag===oldTag)return;
+  const newT=newTag.trim();
+  if(!newT)return;
+  let count=0;
+  (S.db?.articles||[]).forEach(a=>{
+    if(!a.ai_tags)return;
+    const idx=a.ai_tags.indexOf(oldTag);
+    if(idx>=0){a.ai_tags[idx]=newT;count++;}
+  });
+  saveDB();renderAiChips();renderTagRows();renderTagManager();
+  toast(`已將「${oldTag}」改名為「${newT}」（${count} 篇）`);
+}
+
+function tmMerge(fromTag){
+  const freq={};
+  (S.db?.articles||[]).forEach(a=>(a.ai_tags||[]).forEach(t=>{freq[t]=(freq[t]||0)+1;}));
+  const others=Object.keys(freq).filter(t=>t!==fromTag).sort();
+  const toTag=prompt(`將「${fromTag}」合併到哪個 tag？\n（請輸入目標 tag 全名，或從以下選一個）\n\n${others.slice(0,15).join('\n')}`,others[0]||'');
+  if(!toTag||toTag===fromTag)return;
+  const toT=toTag.trim();if(!toT)return;
+  let count=0;
+  (S.db?.articles||[]).forEach(a=>{
+    if(!a.ai_tags)return;
+    if(a.ai_tags.includes(fromTag)){
+      a.ai_tags=a.ai_tags.filter(t=>t!==fromTag);
+      if(!a.ai_tags.includes(toT))a.ai_tags.push(toT);
+      count++;
+    }
+  });
+  saveDB();renderAiChips();renderTagRows();renderTagManager();
+  toast(`已將「${fromTag}」合併到「${toT}」（${count} 篇）`);
+}
+
+function tmDelete(tag){
+  const freq={};
+  (S.db?.articles||[]).forEach(a=>(a.ai_tags||[]).forEach(t=>{freq[t]=(freq[t]||0)+1;}));
+  if(!confirm(`刪除 tag「${tag}」？\n將從 ${freq[tag]||0} 篇文章中移除，無法還原。`))return;
+  (S.db?.articles||[]).forEach(a=>{
+    if(a.ai_tags)a.ai_tags=a.ai_tags.filter(t=>t!==tag);
+  });
+  saveDB();renderAiChips();renderTagRows();renderTagManager();
+  toast(`已刪除「${tag}」`);
+}
+
+function tmBlock(tag){
+  if(!confirm(`封鎖「${tag}」？\n1. 從所有文章移除此 tag\n2. 之後 AI 不會再產生此 tag`))return;
+  if(!S.cfg.blocked_tags)S.cfg.blocked_tags=[];
+  if(!S.cfg.blocked_tags.includes(tag))S.cfg.blocked_tags.push(tag);
+  // Also delete from all articles
+  (S.db?.articles||[]).forEach(a=>{
+    if(a.ai_tags)a.ai_tags=a.ai_tags.filter(t=>t!==tag);
+  });
+  saveCfg();saveDB();renderAiChips();renderTagRows();renderTagManager();
+  toast(`已封鎖「${tag}」`);
+}
+
+function tmUnblock(tag){
+  S.cfg.blocked_tags=(S.cfg.blocked_tags||[]).filter(t=>t!==tag);
+  saveCfg();renderTagManager();
+  toast(`已解除封鎖「${tag}」`);
+}
+function saveAutoClear(val){
+  S.cfg.auto_clear_days=+val;
+  saveCfg();
+  toast(+val===0?'已停用自動清除':`已設定 ${val} 天後自動清除`);
+}
+function purgeDeleted(manual=false){
+  const days=S.cfg.auto_clear_days??30;
+  if(days===0&&!manual)return 0; // disabled and not manual
+  const today=new Date().toISOString().split('T')[0];
+
+  // Auto mode: only run if last purge was 7+ days ago
+  if(!manual){
+    const last=S.cfg.last_purge_date||'';
+    const daysSinceLast=last
+      ?Math.floor((new Date(today)-new Date(last))/(1000*60*60*24))
+      :999;
+    if(daysSinceLast<7)return 0;
+  }
+
+  const cutoff=new Date();
+  cutoff.setDate(cutoff.getDate()-(manual?0:days));
+  // Manual: purge all deleted regardless of deleted_at
+  // Auto: only purge deleted older than N days
+  const cutoffStr=manual?today:cutoff.toISOString().split('T')[0];
+
+  const before=S.db.articles.length;
+  S.db.articles=S.db.articles.filter(a=>{
+    if(a.status!=='deleted')return true;
+    if(manual)return false; // manual: remove all deleted
+    if(!a.deleted_at||a.deleted_at<=cutoffStr)return false;
+    return true;
+  });
+  const purged=before-S.db.articles.length;
+
+  // Record last purge date
+  S.cfg.last_purge_date=today;
+  saveCfg();
+  return purged;
+}
+
+async function manualPurge(){
+  const deleted=S.db.articles.filter(a=>a.status==='deleted');
+  if(!deleted.length){toast('目前沒有已刪除的文章');return;}
+  if(!confirm(`立刻永久移除所有已刪除的文章（${deleted.length} 篇）？\n\nPMID 會保留在抓取記錄中，不會重抓。`))return;
+  const purged=purgeDeleted(true);
+  await saveDB();
+  applyF();
+  updateDbInfo();
+  toast(`已移除 ${purged} 篇已刪除文章`);
+  renderTagManager();
+}
+function updateDbInfo(){
+  if(!S.db)return;
+  const el=document.getElementById('db-info');
+  const fav=S.db.articles.filter(a=>(a.purpose_tags||[]).includes('fav')).length;
+  const read=S.db.articles.filter(a=>a.status==='read').length;
+  const del=S.db.articles.filter(a=>a.status==='deleted').length;
+  if(el)el.innerHTML=`文章總數：<span>${S.db.articles.length}</span> 篇<br>已讀：<span>${read}</span> 篇<br>收藏：<span>${fav}</span> 篇<br>最後更新：<span>${S.db.articles[0]?.added_at||'—'}</span>`;
+  // Purge button in header
+  const pBtn=document.getElementById('purge-btn');
+  const pLbl=document.getElementById('purge-lbl');
+  if(pBtn&&pLbl){
+    if(del>0){
+      pLbl.textContent=`清除已刪除（${del}）`;
+      pBtn.style.opacity='1';
+      pBtn.style.borderColor='rgba(220,100,100,.4)';
+      pBtn.style.color='#e09090';
+    }else{
+      pLbl.textContent='清除已刪除';
+      pBtn.style.opacity='.3';
+      pBtn.style.borderColor='rgba(200,100,100,.18)';
+      pBtn.style.color='var(--ter)';
+    }
+  }
+}
+
+// ══ EXPORT / IMPORT ═══════════════════════════════
+function clearSeen(days){
+  if(days===undefined){
+    // Full clear
+    if(!confirm('清除全部抓取記錄後，下次抓取會重新拉所有文章（現有資料不受影響）。確定？'))return;
+    S.db.seen=[];
+    saveDB();
+    toast('已清除全部抓取記錄');
+    return;
+  }
+  // Partial clear: remove entries within last N days
+  const cutoff=new Date();
+  cutoff.setDate(cutoff.getDate()-days);
+  const cutoffStr=cutoff.toISOString().split('T')[0];
+  const before=S.db.seen.length;
+  S.db.seen=S.db.seen.filter(e=>{
+    const d=typeof e==='string'?null:e.d;
+    // Legacy string entries (no date) — keep them
+    if(!d)return true;
+    // Remove if within the last N days
+    return d<cutoffStr;
+  });
+  const removed=before-S.db.seen.length;
+  saveDB();
+  toast(`已清除最近 ${days} 天的抓取記錄（${removed} 筆），下次可重抓這段期間的文章`);
+}
+function resetDB(){
+  if(!confirm('確定要完整清除資料庫？\n\n所有文章、標記、Hashtag、備註、抓取記錄都會刪除，無法還原。'))return;
+  S.db=defDb();
+  saveDB();
+  S.filtered=[];
+  vsReset();
+  renderHtChips();
+  updateDbInfo();
+  closePanel();
+  toast('資料庫已清除');
+}
+// ══ ANALYSIS MODAL ════════════════════════════════
+const ANA={sel:new Set()};
+
+function openAnalysis(){
+  const tagged=(S.db?.articles||[]).filter(a=>(a.purpose_tags||[]).includes('analyze'));
+  if(!tagged.length){toast('請先在文章側邊欄標記「AI分析」');return;}
+  document.getElementById('ana-step1').style.display='flex';
+  document.getElementById('ana-step2').style.display='none';
+  ANA.sel=new Set(tagged.map(a=>a.pmid));
+  renderAnaList(tagged);
+  document.getElementById('analysis-overlay').style.display='block';
+}
+function closeAnalysis(){
+  document.getElementById('analysis-overlay').style.display='none';
+}
+function renderAnaList(tagged){
+  const el=document.getElementById('ana-list');
+  el.innerHTML=tagged.map(a=>{
+    const analyzed=a.analyzed_at;
+    return `
+    <label style="display:flex;align-items:flex-start;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--bd)" onmouseover="this.style.background='var(--sur2)'" onmouseout="this.style.background=''">
+      <input type="checkbox" data-pmid="${a.pmid}" ${ANA.sel.has(a.pmid)?'checked':''} onchange="anaToggle('${a.pmid}',this.checked)" style="margin-top:3px;accent-color:var(--ac);width:14px;height:14px;flex-shrink:0;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:var(--txt);line-height:1.4;margin-bottom:2px">${esc(a.title_zh||a.title)}</div>
+        <div style="font-size:11px;color:var(--mu);font-style:italic">${esc(a.journal||'')} <span style="font-style:normal;color:var(--ter);font-family:var(--mono)">${a.pub_date||''}</span>
+          ${analyzed?`<span style="margin-left:8px;font-style:normal;color:var(--analyze-c);font-family:var(--mono);font-size:10px">● 已分析 ${analyzed}</span>`:''}
+        </div>
+        ${(a.ai_tags||[]).length?`<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">${a.ai_tags.slice(0,4).map(t=>`<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:var(--acd);color:var(--ac)">${esc(t)}</span>`).join('')}</div>`:''}
+      </div>
+    </label>`;
+  }).join('');
+  updateAnaCount();
+}
+function anaToggle(pmid,checked){
+  if(checked)ANA.sel.add(pmid);else ANA.sel.delete(pmid);
+  updateAnaCount();
+}
+function anaSelectAll(){
+  document.querySelectorAll('#ana-list input[type=checkbox]').forEach(cb=>{cb.checked=true;ANA.sel.add(cb.dataset.pmid);});
+  updateAnaCount();
+}
+function anaSelectNone(){
+  document.querySelectorAll('#ana-list input[type=checkbox]').forEach(cb=>{cb.checked=false;ANA.sel.delete(cb.dataset.pmid);});
+  updateAnaCount();
+}
+function updateAnaCount(){
+  const n=ANA.sel.size;
+  document.getElementById('ana-sel-cnt').textContent=n?`已選 ${n} 篇`:'尚未選擇';
+  document.getElementById('ana-gen-btn').style.opacity=n?'1':'.4';
+  document.getElementById('ana-gen-btn').disabled=!n;
+}
+function anaGenerate(){
+  if(!ANA.sel.size){toast('請先選擇文章');return;}
+  const list=(S.db?.articles||[]).filter(a=>ANA.sel.has(a.pmid));
+  let t=`以下是我從放腫 PubMed 文獻庫收藏的 ${list.length} 篇文章，請幫我深度整理與臨床意義分析：\n\n`;
+  list.forEach((a,i)=>{
+    t+=`${i+1}. ${a.title_zh?a.title_zh+'\n   ('+a.title+')':a.title}\n`;
+    t+=`   期刊：${a.journal} (${a.pub_date})`;
+    const ifv=getIF(a.journal);
+    if(ifv)t+=` IF ${ifv}`;
+    t+=`\n   PMID: ${a.pmid} | ${a.url}\n`;
+    if(a.ai_tags?.length)t+=`   分類：${a.ai_tags.join('、')}\n`;
+    if(a.hashtags?.length)t+=`   標籤：${a.hashtags.map(h=>'#'+h).join(' ')}\n`;
+    if(a.notes)t+=`   備註：${a.notes}\n`;
+    t+='\n';
+  });
+  t+='請依主題分組，每篇給出：①一句話重點 ②臨床意義 ③台灣可行性。';
+  ANA.text=t;
+  // Switch to step 2
+  document.getElementById('ana-step1').style.display='none';
+  const s2=document.getElementById('ana-step2');
+  s2.style.display='flex';
+  document.getElementById('ana-preview-title').textContent=`已選 ${list.length} 篇，準備給 Claude 分析`;
+  document.getElementById('ana-preview').textContent=t;
+  document.getElementById('ana-copy-btn').textContent='複製給 Claude';
+}
+function anaBack(){
+  document.getElementById('ana-step2').style.display='none';
+  document.getElementById('ana-step1').style.display='flex';
+}
+function anaCopy(){
+  const today=new Date().toISOString().split('T')[0];
+  navigator.clipboard.writeText(ANA.text).then(()=>{
+    // Record analyzed_at on selected articles
+    (S.db?.articles||[]).forEach(a=>{
+      if(ANA.sel.has(a.pmid))a.analyzed_at=today;
+    });
+    saveDB();
+    const btn=document.getElementById('ana-copy-btn');
+    btn.textContent='已複製！貼給 Claude 分析';
+    btn.style.background='var(--read-c)';
+    btn.style.color='#c8f0e0';
+    setTimeout(()=>{btn.textContent='複製給 Claude';btn.style.background='var(--ac)';btn.style.color='#0f2030';},2500);
+  });
+}
+
+function expClaude(){
+  // Legacy: open the new analysis flow
+  openAnalysis();
+}
+function expPPT(){
+  const list=S.db.articles.filter(a=>(a.purpose_tags||[]).includes('apply'));
+  if(!list.length){toast('請先標記「可用」的文章');return;}
+  let t=`PPT 素材清單 — 標示「可應用」文章\n${'─'.repeat(50)}\n\n`;
+  list.forEach((a,i)=>{
+    const ifv=getIF(a.journal);
+    t+=`${i+1}. ${a.title}\n   ${a.full_journal}${ifv?` (IF ${ifv})`:''}. ${a.pub_date}\n   ${a.url}\n`;
+    if(a.ai_tags?.length)t+=`   Tags: ${a.ai_tags.join(' · ')}\n`;
+    t+='\n';
+  });
+  const blob=new Blob([t],{type:'text/plain'});
+  const el=document.createElement('a');el.href=URL.createObjectURL(blob);
+  el.download=`ppt_${new Date().toISOString().split('T')[0]}.txt`;el.click();
+  toast('已下載 PPT 素材清單');
+}
+function expDB(){
+  const blob=new Blob([JSON.stringify(S.db,null,2)],{type:'application/json'});
+  const el=document.createElement('a');el.href=URL.createObjectURL(blob);
+  el.download=`radonc_backup_${new Date().toISOString().split('T')[0]}.json`;el.click();
+  toast('已下載備份');
+}
+async function impDB(e){
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const t=await f.text();
+    const data=JSON.parse(t);
+    if(!data.articles)throw new Error('格式不正確');
+    S.db=data;
+    await saveDB();
+    applyF();renderHtChips();
+    toast('匯入成功：'+data.articles.length+' 篇');
+  }catch(e){toast('匯入失敗：'+e.message);}
+  e.target.value='';
+}
+
+// ══ UTIL ══════════════════════════════════════════
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(m){
+  const el=document.getElementById('toast');
+  el.textContent=m;el.classList.add('on');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2500);
+}
+
+// ══ INIT ══════════════════════════════════════════
+async function rdInit(){
+  // Load from IndexedDB
+  S.cfg=await dbGet('config')||defCfg();
+  S.db=await dbGet('database')||defDb();
+  S.gctr=Math.max(...S.cfg.groups.map(g=>g.id),0);
+
+  // Apply saved theme
+  if(S.cfg.theme&&S.cfg.theme!=='nordic')applyTheme(S.cfg.theme);
+  renderThemeSwatches();
+
+  // Apply config to UI
+  document.getElementById('ai-tog').classList.toggle('on',S.cfg.claude_on);
+  updateKeyDisplay();
+  document.getElementById('f-days').value=S.cfg.days||7;
+  document.getElementById('f-max').value=S.cfg.max||100;
+  const acd=document.getElementById('auto-clear-days');
+  if(acd)acd.value=S.cfg.auto_clear_days??30;
+  const lpl=document.getElementById('last-purge-lbl');
+  if(lpl)lpl.textContent=S.cfg.last_purge_date||'從未執行';
+
+  // Try restore folder handle (desktop)
+  await tryRestoreDir();
+
+  // Auto purge: runs weekly
+  const purged=purgeDeleted(false);
+  if(purged>0){await saveDB();toast(`自動清除 ${purged} 篇已刪除文章`);}
+
+  // Initial view setup
+  go('lib');
+  applyF();
+  renderHtChips();
+  renderAiChips();
+  updateDbInfo();
+}
+
+// Auto-start if already authenticated
+if(sessionStorage.getItem('rd_auth')==='1'){
+  document.getElementById('gate').style.display='none';
+  const app=document.getElementById('app');
+  app.style.display='flex';app.style.flexDirection='column';app.style.height='100vh';
+  rdInit();
+}else{
+  setTimeout(()=>document.getElementById('gate-inp')?.focus(),100);
+}
+</script>
+</body>
+</html>
